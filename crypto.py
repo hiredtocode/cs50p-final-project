@@ -22,6 +22,11 @@ def check_coins_list():
     response_data = json.loads(response.text)
     return response_data
 
+# Add to the favorites list
+def add_to_favorites(code):
+    favorites_list.append(code)
+    print(f"\n\033[92m Successfully added {code} to the favorites list.\033[0m\n")
+
 # Function to check the service status
 def check_service_status():
     url = "https://api.livecoinwatch.com/status"
@@ -61,7 +66,7 @@ def display_menu():
     print("1. Show all available cryptocurrency coins")
     print("2. Add a cryptocurrency to my favorites")
     print("3. Remove a cryptocurrency from my favorites")
-    print("4. Show the list of coins and current prices that are in my favorites")
+    print("4. Display my favorites")
     print("5. My total amount of USD")
     print("6. My total amount of USD invested in coins")
     print("7. Current status of my Profit / Loss")
@@ -70,13 +75,17 @@ def display_menu():
 
 # Main program
 if __name__ == "__main__":
+    favorites_list = []
+
     status = check_service_status()
     credit = check_service_credits()
     display_credit(credit)
     display_status(status)
-    display_menu()
+
+
 
     while True:
+        display_menu()
         choice = input("Select an option (1-9) or 0 to exit the program: ")
 
         try:
@@ -87,14 +96,26 @@ if __name__ == "__main__":
                 for coin in coins_list:
                     code = coin['code']
                     rate = "{:,.2f}".format(coin['rate'])
-                    print(f"{code} ${rate} USD")
-                display_menu()
+                    print(f"\033[92m{code} ${rate} USD\033[0m")
             elif choice == 2:
-                print("Option 2 selected.")
+                while True:
+                    try:
+                        print("Option 2 selected.")
+                        coin_name = input("What is the acronym of the coin name? ").strip().upper()
+                        if coin_name == "Q":
+                            break  # Return to the main menu
+                        if not coin_name or not coin_name.isalpha():
+                            print("\nSorry, you must enter a valid acronym of the coin name or 'q' to quit.\n")
+                        else:
+                            add_to_favorites(coin_name)
+                            print(f"Updated favorites list result is: {favorites_list}")
+                            break  # Successfully added, return to the main menu
+                    except ValueError:
+                        print("\nInvalid input. Please enter a valid acronym of the coin name or 'q' to quit.\n")
             elif choice == 3:
                 print("Option 3 selected.")
             elif choice == 4:
-                print("Option 4 selected.")
+                print(f"\n\033[92mFavorites list: {favorites_list}\033[0m\n")
             elif choice == 5:
                 print("Option 5 selected.")
             elif choice == 6:
@@ -106,9 +127,9 @@ if __name__ == "__main__":
             elif choice == 9:
                 print("Option 9 selected.")
             elif choice == 0:
-                print(f"You selected Option {choice}. The program will now exit. Thank you.")
+                print(f"\nYou selected Option {choice}. The program will now exit. Thank you.\n")
                 break
             else:
-                print("Invalid choice. Please select a number between 1 and 9 or 0 to exit the program.")
+                print("\nInvalid choice. Please select a number between 1 and 9 or 0 to exit the program.\n")
         except ValueError:
-            print("Invalid input. Please enter a number.")
+            print("\nInvalid input. Please enter a number.\n")
