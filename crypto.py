@@ -39,17 +39,20 @@ def check_coins_list():
 def add_to_favorites(code):
     favorites_list.append(code)
     save_favorites(favorites_list)
-    print(f"\n\033[92m Successfully added {code} to the favorites list.\033[0m\n")
+    print(f"\n\033[92mSuccessfully added {code} to the favorites list.\033[0m\n")
 
 # Function to remove a cryptocurrency from favorites
 def remove_from_favorites(code):
-    if code in favorites_list:
+    if not favorites_list:
+        print(f"\n\033[92mYour favorites list is currently empty.\033[0m\n")
+        return
+    elif code in favorites_list:
         favorites_list.remove(code)
         save_favorites(favorites_list)
         print(f"\n\033[92m Successfully removed {code} from the favorites list.\033[0m\n")
+        print(f"\n\033[92mCurrent favorite list contains: {favorites_list}\033[0m\n")
     else:
         print(f"\n\033[91m {code} is not in your favorites list.\033[0m\n")
-
 # Function to check the service status
 def check_service_status():
     url = "https://api.livecoinwatch.com/status"
@@ -130,27 +133,33 @@ if __name__ == "__main__":
                             print("\nSorry, you must enter a valid acronym of the coin name or 'q' to quit.\n")
                         else:
                             add_to_favorites(coin_name)
-                            print(f"Updated favorites list result is: {favorites_list}")
+                            print(f"\033[92mUpdated favorites list result is: {favorites_list}\033[0m\n")
                             break  # Successfully added, return to the main menu
                     except ValueError:
                         print("\nInvalid input. Please enter a valid acronym of the coin name or 'q' to quit.\n")
             elif choice == 3:
-                while True:
-                    try:
-                        print("Option 3 selected.")
-                        coin_name = input("What is the acronym of the coin name? ").strip().upper()
-                        if coin_name == "Q":
-                            break  # Return to the main menu
-                        if not coin_name or not coin_name.isalpha():
-                            print("\nSorry, you must enter a valid acronym of the coin name or 'q' to quit.\n")
-                        else:
-                            remove_from_favorites(coin_name)
-                            print(f"Updated favorites list result is: {favorites_list}")
-                            break  # Successfully added, return to the main menu
-                    except ValueError:
-                        print("\nInvalid input. Please enter a valid acronym of the coin name or 'q' to quit.\n")
+                if not favorites_list:
+                    print(f"\n\033[91mSorry, this option is not available since your favorites list is currently empty.\033[0m\n")
+                else:
+                    while True:
+                        print(f"\n\033[92mNewly updated favorites list result is: {favorites_list}\033[0m\n")
+                        try:
+                            print("Option 3 selected.")
+                            coin_name = input("Which coin would you like to remove? ").strip().upper()
+                            if coin_name == "Q":
+                                break  # Return to the main menu
+                            if not coin_name or not coin_name.isalpha():
+                                print("\nSorry, you must enter a valid acronym of the coin name or 'q' to quit.\n")
+                            else:
+                                remove_from_favorites(coin_name)
+                                break  # Successfully added, return to the main menu
+                        except ValueError:
+                            print("\nInvalid input. Please enter a valid acronym of the coin name or 'q' to quit.\n")
             elif choice == 4:
-                print(f"\n\033[92mFavorites list: {favorites_list}\033[0m\n")
+                if not favorites_list:
+                    print(f"\n\033[91mSorry, your favorite list is empty.\033[0m\n")
+                else:
+                    print(f"\n\033[92mFavorites list: {favorites_list}\033[0m\n")
             elif choice == 5:
                 print("Option 5 selected.")
             elif choice == 6:
