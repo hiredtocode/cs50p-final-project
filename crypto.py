@@ -58,15 +58,15 @@ def display_credit(credit):
 # Define a function to display the menu
 def display_menu():
     print("Please input your selection number:")
-    print("1. Show all available crypto coins")
-    print("2. Add a crypto to my favorites")
-    print("3. Remove a crypto from my favorites")
+    print("1. Show all available cryptocurrency coins")
+    print("2. Add a cryptocurrency to my favorites")
+    print("3. Remove a cryptocurrency from my favorites")
     print("4. Show the list of coins and current prices that are in my favorites")
     print("5. My total amount of USD")
     print("6. My total amount of USD invested in coins")
-    print("7. Current status of my Loss / Profit")
-    print("8. Buy crypto")
-    print("9. Sell crypto")
+    print("7. Current status of my Profit / Loss")
+    print("8. Buy cryptocurrency")
+    print("9. Sell cryptocurrency")
 
 # Main program
 if __name__ == "__main__":
@@ -85,7 +85,10 @@ if __name__ == "__main__":
                 coins_list = check_coins_list()
                 print("Top 10 coins list:")
                 for coin in coins_list:
-                    print(f"{coin['code']} ({coin['rate']})")
+                    code = coin['code']
+                    rate = "{:,.2f}".format(coin['rate'])
+                    print(f"{code} ${rate} USD")
+                display_menu()
             elif choice == 2:
                 print("Option 2 selected.")
             elif choice == 3:
