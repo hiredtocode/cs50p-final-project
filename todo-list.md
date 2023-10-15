@@ -1,0 +1,37 @@
+1. display main menu at start which includes:
+   - Show list of available coins
+   - Add coin
+     - Prompt user to input coin's acronym
+   - Remove coin
+     - Prompt user to input coin's acronym
+   - Show the list of coins and current prices
+     - Show coins that are tracked
+     - Show market prices of these coins
+       - If the market price is higher than when last bought show green texts
+       - If the market price is lower than when last purhcased show red texts
+   - Check total amount of USD
+     - Show total amount of USD in USDT of all USD + coin values
+   - Check total amount of USD invested in coins
+     - Show total amount of USD amount of all coins invested
+   - Current Loss / Profit
+     - Show total amount of money deposited
+     - Show total amount of money currently
+     - Show L/P amount
+       - Display in red if the value is negative
+       - Display in green if the value is positive
+   - Buy crypto
+     - Which coin would you like to buy (input acronym)
+       - Show current coin name, acronym, price
+       - confirm if it's the coin they want to purchase by pressing "y" or "n"
+       - if "y"
+         - How much of it would you like to purchase?
+       - if "n"
+         - back to "Which coin would you like to buy prompt
+   - Sell crypto
+     - Which coin would you like to buy (input acronym)
+       - Show current coin name, acronym, price, their share amount
+         - confirm if it's the coin they want to sell by pressing "y" or "n"
+           - if "y"
+             - How much of it would you like to sell?
+           - if "n"
+             - back to "Which coin would you like to sell prompt
