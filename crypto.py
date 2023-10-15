@@ -96,6 +96,13 @@ def make_deposit(balance, amount):
     save_state(state)
     return balance
 
+# Function to make a withdrawal
+def make_withdrawal(balance, amount):
+    balance -= amount
+    state["deposited_balance"] = balance
+    save_state(state)
+    return balance
+
 # Function to display "Online" in green or "Offline" in red
 def display_status(status):
     if status == "{}":
@@ -211,12 +218,14 @@ if __name__ == "__main__":
                     print_green(f"The total balance is now: ${deposited_balance:.2f}.")
             elif choice == 11:
                 print("Option 11 selected.") # Make a withdrawal
+                print_green(f"Current amount is ${deposited_balance:.2f}")
                 withdrawal_amount = float(input("Enter the withdrawal amount: $"))
                 if withdrawal_amount <= 0 or withdrawal_amount > deposited_balance:
                     print_red("Invalid withdrawal amount.")
                 else:
-                    deposited_balance -= withdrawal_amount
-                    print_green("Withdrawal successful.")
+                    deposited_balance = make_withdrawal(deposited_balance, withdrawal_amount)
+                    print_green(f"Successfully withdrew ${withdrawal_amount:.2f}.")
+                    print_green(f"The total balance is now: ${deposited_balance:.2f}.")
             elif choice == 0:
                 print_green(f"\nYou selected Option {choice}. The program will now exit. Thank you.\n")
                 break
