@@ -1,5 +1,18 @@
 import requests
 import json
+import os
+
+# Function to load favorites from a file
+def load_favorites():
+    if os.path.isfile("favorites.json"):
+        with open("favorites.json", "r") as file:
+            return json.load(file)
+    return []
+
+# Function to save favorites to a file
+def save_favorites(favorites):
+    with open("favorites.json", "w") as file:
+        json.dump(favorites, file)
 
 # Function to check coins list
 def check_coins_list():
@@ -25,7 +38,17 @@ def check_coins_list():
 # Add to the favorites list
 def add_to_favorites(code):
     favorites_list.append(code)
+    save_favorites(favorites_list)
     print(f"\n\033[92m Successfully added {code} to the favorites list.\033[0m\n")
+
+# Function to remove a cryptocurrency from favorites
+def remove_from_favorites(code):
+    if code in favorites_list:
+        favorites_list.remove(code)
+        save_favorites(favorites_list)
+        print(f"\n\033[92m Successfully removed {code} from the favorites list.\033[0m\n")
+    else:
+        print(f"\n\033[91m {code} is not in your favorites list.\033[0m\n")
 
 # Function to check the service status
 def check_service_status():
@@ -75,8 +98,7 @@ def display_menu():
 
 # Main program
 if __name__ == "__main__":
-    favorites_list = []
-
+    favorites_list = load_favorites()
     status = check_service_status()
     credit = check_service_credits()
     display_credit(credit)
@@ -113,7 +135,20 @@ if __name__ == "__main__":
                     except ValueError:
                         print("\nInvalid input. Please enter a valid acronym of the coin name or 'q' to quit.\n")
             elif choice == 3:
-                print("Option 3 selected.")
+                while True:
+                    try:
+                        print("Option 3 selected.")
+                        coin_name = input("What is the acronym of the coin name? ").strip().upper()
+                        if coin_name == "Q":
+                            break  # Return to the main menu
+                        if not coin_name or not coin_name.isalpha():
+                            print("\nSorry, you must enter a valid acronym of the coin name or 'q' to quit.\n")
+                        else:
+                            remove_from_favorites(coin_name)
+                            print(f"Updated favorites list result is: {favorites_list}")
+                            break  # Successfully added, return to the main menu
+                    except ValueError:
+                        print("\nInvalid input. Please enter a valid acronym of the coin name or 'q' to quit.\n")
             elif choice == 4:
                 print(f"\n\033[92mFavorites list: {favorites_list}\033[0m\n")
             elif choice == 5:
@@ -127,6 +162,7 @@ if __name__ == "__main__":
             elif choice == 9:
                 print("Option 9 selected.")
             elif choice == 0:
+                save_favorites(favorites_list)
                 print(f"\nYou selected Option {choice}. The program will now exit. Thank you.\n")
                 break
             else:
