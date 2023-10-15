@@ -1,6 +1,27 @@
 import requests
 import json
 
+# Function to check coins list
+def check_coins_list():
+    url = "https://api.livecoinwatch.com/coins/list"
+
+    payload = json.dumps({
+    "currency": "USD",
+    "sort": "rank",
+    "order": "ascending",
+    "offset": 0,
+    "limit": 10,
+    "meta": False
+    })
+    headers = {
+    'content-type': 'application/json',
+    'x-api-key': 'bd95c726-08ea-447d-94e5-00088cf86908'
+    }
+
+    response = requests.request("POST", url, headers=headers, data=payload)
+    response_data = json.loads(response.text)
+    return response_data
+
 # Function to check the service status
 def check_service_status():
     url = "https://api.livecoinwatch.com/status"
@@ -60,9 +81,27 @@ if __name__ == "__main__":
 
         try:
             choice = int(choice)
-            if 1 <= choice <= 9:
-                print(f"You selected Option {choice}.")
-                break
+            if choice == 1:
+                coins_list = check_coins_list()
+                print("Top 10 coins list:")
+                for coin in coins_list:
+                    print(f"{coin['code']} ({coin['rate']})")
+            elif choice == 2:
+                print("Option 2 selected.")
+            elif choice == 3:
+                print("Option 3 selected.")
+            elif choice == 4:
+                print("Option 4 selected.")
+            elif choice == 5:
+                print("Option 5 selected.")
+            elif choice == 6:
+                print("Option 6 selected.")
+            elif choice == 7:
+                print("Option 7 selected.")
+            elif choice == 8:
+                print("Option 8 selected.")
+            elif choice == 9:
+                print("Option 9 selected.")
             elif choice == 0:
                 print(f"You selected Option {choice}. The program will now exit. Thank you.")
                 break
