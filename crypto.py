@@ -46,7 +46,8 @@ def check_coins_list():
 # Add to the favorites list
 def add_to_favorites(code):
     favorites_list.append(code)
-    save_state(favorites_list)
+    state["favorites"] = favorites_list
+    save_state(state)
     print_green(f"Successfully added {code} to the favorites list.")
 
 # Function to remove a cryptocurrency from favorites
@@ -91,7 +92,8 @@ def display_deposited_balance(balance):
 # Function to make a deposit
 def make_deposit(balance, amount):
     balance += amount
-    print_green(f"Deposited amount: ${amount:.2f}.")
+    state["deposited_balance"] = balance
+    save_state(state)
     return balance
 
 # Function to display "Online" in green or "Offline" in red
@@ -198,13 +200,15 @@ if __name__ == "__main__":
             elif choice == 9:
                 print("Option 9 selected.")
             elif choice == 10:
-                 # Make a deposit
+                # Make a deposit
+                print_green(f"Current amount is ${deposited_balance:.2f}")
                 deposit_amount = float(input("Enter the deposit amount: $"))
                 if deposit_amount <= 0:
                     print_red("Invalid deposit amount.")
                 else:
                     deposited_balance = make_deposit(deposited_balance, deposit_amount)
                     print_green(f"Successfully deposited ${deposit_amount:.2f}.")
+                    print_green(f"The total balance is now: ${deposited_balance:.2f}.")
             elif choice == 11:
                 print("Option 11 selected.") # Make a withdrawal
                 withdrawal_amount = float(input("Enter the withdrawal amount: $"))
@@ -214,8 +218,6 @@ if __name__ == "__main__":
                     deposited_balance -= withdrawal_amount
                     print_green("Withdrawal successful.")
             elif choice == 0:
-                state = {"favorites": favorites_list, "deposited_balance": deposited_balance}
-                save_state(state)
                 print_green(f"\nYou selected Option {choice}. The program will now exit. Thank you.\n")
                 break
             else:
