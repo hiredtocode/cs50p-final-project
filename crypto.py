@@ -2,17 +2,25 @@ import requests
 import json
 import os
 
-# Function to load favorites from a file
-def load_favorites():
-    if os.path.isfile("favorites.json"):
-        with open("favorites.json", "r") as file:
-            return json.load(file)
-    return []
+# Function to print text in green
+def print_green(text):
+    print(f"\033[92m{text}\033[0m")
 
-# Function to save favorites to a file
-def save_favorites(favorites):
-    with open("favorites.json", "w") as file:
-        json.dump(favorites, file)
+# Function to print text in red
+def print_red(text):
+    print(f"\033[91m{text}\033[0m")
+
+# Function to load the entire state from a file
+def load_state():
+    if os.path.isfile("state.json"):
+        with open("state.json", "r") as file:
+            return json.load(file)
+    return {"favorites": [], "deposited_balance": 0}
+
+# Function to save the entire state to a file
+def save_state(state):
+    with open("state.json", "w") as file:
+        json.dump(state, file)
 
 # Function to check coins list
 def check_coins_list():
@@ -38,21 +46,22 @@ def check_coins_list():
 # Add to the favorites list
 def add_to_favorites(code):
     favorites_list.append(code)
-    save_favorites(favorites_list)
-    print(f"\n\033[92mSuccessfully added {code} to the favorites list.\033[0m\n")
+    save_state(favorites_list)
+    print_green(f"Successfully added {code} to the favorites list.")
 
 # Function to remove a cryptocurrency from favorites
 def remove_from_favorites(code):
     if not favorites_list:
-        print(f"\n\033[92mYour favorites list is currently empty.\033[0m\n")
+        print_green(f"Your favorites list is currently empty.")
         return
     elif code in favorites_list:
         favorites_list.remove(code)
-        save_favorites(favorites_list)
-        print(f"\n\033[92m Successfully removed {code} from the favorites list.\033[0m\n")
-        print(f"\n\033[92mCurrent favorite list contains: {favorites_list}\033[0m\n")
+        save_state(favorites_list)
+        print_green(f" Successfully removed {code} from the favorites list.")
+        print_green(f"Current favorite list contains: {favorites_list}")
     else:
-        print(f"\n\033[91m {code} is not in your favorites list.\033[0m\n")
+        print_red(f"{code} is not in your favorites list.")
+        return
 # Function to check the service status
 def check_service_status():
     url = "https://api.livecoinwatch.com/status"
@@ -74,6 +83,16 @@ def check_service_credits():
     response = requests.request("POST", url, headers=headers, data=payload)
     response_data = json.loads(response.text)
     return response_data.get("dailyCreditsRemaining")
+
+# Function to display the current deposited balance
+def display_deposited_balance(balance):
+    print_green(f"Total balance: ${balance:.2f}")
+
+# Function to make a deposit
+def make_deposit(balance, amount):
+    balance += amount
+    print_green(f"Deposited amount: ${amount:.2f}.")
+    return balance
 
 # Function to display "Online" in green or "Offline" in red
 def display_status(status):
@@ -98,12 +117,18 @@ def display_menu():
     print("7. Current status of my Profit / Loss")
     print("8. Buy cryptocurrency")
     print("9. Sell cryptocurrency")
+    print("10. Make a deposit")
+    print("11. Make a withdrawl")
 
 # Main program
 if __name__ == "__main__":
-    favorites_list = load_favorites()
+    state = load_state()
+    favorites_list = state["favorites"]
+    deposited_balance = state["deposited_balance"]
+
     status = check_service_status()
     credit = check_service_credits()
+
     display_credit(credit)
     display_status(status)
 
@@ -111,7 +136,7 @@ if __name__ == "__main__":
 
     while True:
         display_menu()
-        choice = input("Select an option (1-9) or 0 to exit the program: ")
+        choice = input("Select an option (1-11) or 0 to exit the program: ")
 
         try:
             choice = int(choice)
@@ -121,7 +146,7 @@ if __name__ == "__main__":
                 for coin in coins_list:
                     code = coin['code']
                     rate = "{:,.2f}".format(coin['rate'])
-                    print(f"\033[92m{code} ${rate} USD\033[0m")
+                    print_green(f"{code} ${rate} USD")
             elif choice == 2:
                 while True:
                     try:
@@ -130,38 +155,40 @@ if __name__ == "__main__":
                         if coin_name == "Q":
                             break  # Return to the main menu
                         if not coin_name or not coin_name.isalpha():
-                            print("\nSorry, you must enter a valid acronym of the coin name or 'q' to quit.\n")
+                            print_red("Sorry, you must enter a valid acronym of the coin name or 'q' to quit.\n")
                         else:
                             add_to_favorites(coin_name)
-                            print(f"\033[92mUpdated favorites list result is: {favorites_list}\033[0m\n")
+                            print_green(f"Updated favorites list result is: {favorites_list}")
                             break  # Successfully added, return to the main menu
                     except ValueError:
-                        print("\nInvalid input. Please enter a valid acronym of the coin name or 'q' to quit.\n")
+                        print_red("Invalid input. Please enter a valid acronym of the coin name or 'q' to quit.\n")
             elif choice == 3:
                 if not favorites_list:
-                    print(f"\n\033[91mSorry, this option is not available since your favorites list is currently empty.\033[0m\n")
+                    print_red(f"Sorry, this option is not available since your favorites list is currently empty.")
                 else:
                     while True:
-                        print(f"\n\033[92mNewly updated favorites list result is: {favorites_list}\033[0m\n")
+                        print_green(f"Newly updated favorites list result is: {favorites_list}")
                         try:
                             print("Option 3 selected.")
                             coin_name = input("Which coin would you like to remove? ").strip().upper()
                             if coin_name == "Q":
                                 break  # Return to the main menu
                             if not coin_name or not coin_name.isalpha():
-                                print("\nSorry, you must enter a valid acronym of the coin name or 'q' to quit.\n")
+                                print_red("\nSorry, you must enter a valid acronym of the coin name or 'q' to quit.\n")
                             else:
                                 remove_from_favorites(coin_name)
                                 break  # Successfully added, return to the main menu
                         except ValueError:
-                            print("\nInvalid input. Please enter a valid acronym of the coin name or 'q' to quit.\n")
+                            print_red("Invalid input. Please enter a valid acronym of the coin name or 'q' to quit.\n")
             elif choice == 4:
                 if not favorites_list:
-                    print(f"\n\033[91mSorry, your favorite list is empty.\033[0m\n")
+                    print_red(f"\nSorry, your favorite list is empty.\n")
                 else:
-                    print(f"\n\033[92mFavorites list: {favorites_list}\033[0m\n")
+                    print_green(f"Favorites list: {favorites_list}")
             elif choice == 5:
                 print("Option 5 selected.")
+                # (Option to display the total deposited balance)
+                display_deposited_balance(deposited_balance)
             elif choice == 6:
                 print("Option 6 selected.")
             elif choice == 7:
@@ -170,11 +197,28 @@ if __name__ == "__main__":
                 print("Option 8 selected.")
             elif choice == 9:
                 print("Option 9 selected.")
+            elif choice == 10:
+                 # Make a deposit
+                deposit_amount = float(input("Enter the deposit amount: $"))
+                if deposit_amount <= 0:
+                    print_red("Invalid deposit amount.")
+                else:
+                    deposited_balance = make_deposit(deposited_balance, deposit_amount)
+                    print_green(f"Successfully deposited ${deposit_amount:.2f}.")
+            elif choice == 11:
+                print("Option 11 selected.") # Make a withdrawal
+                withdrawal_amount = float(input("Enter the withdrawal amount: $"))
+                if withdrawal_amount <= 0 or withdrawal_amount > deposited_balance:
+                    print_red("Invalid withdrawal amount.")
+                else:
+                    deposited_balance -= withdrawal_amount
+                    print_green("Withdrawal successful.")
             elif choice == 0:
-                save_favorites(favorites_list)
-                print(f"\nYou selected Option {choice}. The program will now exit. Thank you.\n")
+                state = {"favorites": favorites_list, "deposited_balance": deposited_balance}
+                save_state(state)
+                print_green(f"\nYou selected Option {choice}. The program will now exit. Thank you.\n")
                 break
             else:
-                print("\nInvalid choice. Please select a number between 1 and 9 or 0 to exit the program.\n")
+                print_red("Invalid choice. Please select a number between 1 and 11 or 0 to exit the program.")
         except ValueError:
-            print("\nInvalid input. Please enter a number.\n")
+            print_red("Invalid input. Please enter a number.")
