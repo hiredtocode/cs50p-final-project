@@ -142,8 +142,7 @@ def reset_state():
         total_balance = state.get("total_balance", 0)
         populated_list = state["populated_list"]
         pre_populate_list()
-        print_green(f"The total balance has been successfully resetted to ${total_balance}")
-        print_green(f"The favorite list has been successfully resetted to {favorites_list}")
+        print_green(f"The total balance and your favorites list has successfully reset.")
         save_state(state)
     else:
         print_red("No state file found. The program will continue running.")
