@@ -69,7 +69,8 @@ def remove_from_favorites(code):
         return
     elif code in favorites_list:
         favorites_list.remove(code)
-        save_state(favorites_list)
+        state["favorites"] = favorites_list
+        save_state(state)
         print_green(f" Successfully removed {code} from the favorites list.")
         print_green(f"Current favorite list contains: {favorites_list}")
     else:
@@ -211,10 +212,10 @@ if __name__ == "__main__":
                         print_red("Invalid input. Please enter a valid acronym of the coin name or 'q' to quit.\n")
             elif choice == 3:
                 if not favorites_list:
-                    print_red(f"Sorry, this option is not available since your favorites list is currently empty.")
+                    print_red(f"\nSorry, this option is unavailable if the list is empty.\n")
                 else:
                     while True:
-                        print_green(f"Newly updated favorites list result is: {favorites_list}")
+                        print_green(f"Current favorites list contains: {favorites_list}")
                         try:
                             print("Option 3 selected.")
                             coin_name = input("Which coin would you like to remove? q to quit: ").strip().upper()
