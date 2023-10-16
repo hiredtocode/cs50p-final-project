@@ -60,6 +60,7 @@ def pre_populate_list():
         state["populated_list"] = populated_list
         save_state(state)
     print_green(f"Successfully pre-populated coins list.\n")
+    return "Pre-population of coins list completed successfully."
 
 # Function to remove a cryptocurrency from favorites
 def remove_from_favorites(code):
@@ -98,7 +99,10 @@ def check_service_credits():
 
 # Function to display the current deposited balance
 def display_deposited_balance(balance):
-    print_green(f"Total balance: ${balance:.2f}")
+    if balance == 0:
+        print_red(f"\nTotal balance: ${balance:.2f}\n")
+    else:
+        print_green(f"\nTotal balance: ${balance:.2f}\n")
 
 # Function to make a deposit
 def make_deposit(balance, amount):
@@ -127,14 +131,22 @@ def display_credit(credit):
 
 # Function to reset the state
 def reset_state():
+    global state, favorites_list, total_balance, populated_list
+
     if os.path.isfile("state.json"):
         os.remove("state.json")
         print_green("State reset. The program will continue running.")
-        # Clear the populated_list
-        state["populated_list"] = []
+        state = {"favorites": [], "total_balance": 0, "populated_list": []}
+        favorites_list = state["favorites"]
+        total_balance = state.get("total_balance", 0)
+        populated_list = state["populated_list"]
+        pre_populate_list()
+        print_green(f"The total balance has been successfully resetted to ${total_balance}")
+        print_green(f"The favorite list has been successfully resetted to {favorites_list}")
         save_state(state)
     else:
         print_red("No state file found. The program will continue running.")
+
 
 # Define a function to display the menu
 def display_menu():
@@ -170,7 +182,6 @@ if __name__ == "__main__":
 
 
     while True:
-        print_green(populated_list)
         display_menu()
         choice = input("Select an option (1-12) or 0 to exit the program: ")
 
@@ -206,11 +217,12 @@ if __name__ == "__main__":
                         print_green(f"Newly updated favorites list result is: {favorites_list}")
                         try:
                             print("Option 3 selected.")
-                            coin_name = input("Which coin would you like to remove? ").strip().upper()
+                            coin_name = input("Which coin would you like to remove? q to quit: ").strip().upper()
                             if coin_name == "Q":
                                 break  # Return to the main menu
                             if not coin_name or not coin_name.isalpha():
                                 print_red("\nSorry, you must enter a valid acronym of the coin name or 'q' to quit.\n")
+                                break
                             else:
                                 remove_from_favorites(coin_name)
                                 break  # Successfully added, return to the main menu
@@ -220,7 +232,7 @@ if __name__ == "__main__":
                 if not favorites_list:
                     print_red(f"\nSorry, your favorite list is empty.\n")
                 else:
-                    print_green(f"Favorites list: {favorites_list}")
+                    print_green(f"\nFavorites list: {favorites_list}\n")
             elif choice == 5:
                 print("Option 5 selected.")
                 # (Option to display the total deposited balance)
@@ -255,8 +267,6 @@ if __name__ == "__main__":
                     print_green(f"The total balance is now: ${total_balance:.2f}.")
             elif choice == 12:
                 reset_state()
-
-
             elif choice == 0:
                 print_green(f"\nYou selected Option {choice}. The program will now exit. Thank you.\n")
                 break
