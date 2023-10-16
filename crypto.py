@@ -15,7 +15,7 @@ def load_state():
     if os.path.isfile("state.json"):
         with open("state.json", "r") as file:
             return json.load(file)
-    return {"favorites": [], "deposited_balance": 0}
+    return {"favorites": [], "total_balance": 0}
 
 # Function to save the entire state to a file
 def save_state(state):
@@ -49,6 +49,17 @@ def add_to_favorites(code):
     state["favorites"] = favorites_list
     save_state(state)
     print_green(f"Successfully added {code} to the favorites list.")
+
+# Pre-populate available list
+def pre_populate_list():
+    coins_list = check_coins_list()
+    print_green("\nPre-populating the coins list...")
+    for coin in coins_list:
+        code = coin['code']
+        populated_list.append(code)
+        state["populated_list"] = populated_list
+        save_state(state)
+    print_green(f"Successfully pre-populated coins list.\n")
 
 # Function to remove a cryptocurrency from favorites
 def remove_from_favorites(code):
@@ -92,14 +103,14 @@ def display_deposited_balance(balance):
 # Function to make a deposit
 def make_deposit(balance, amount):
     balance += amount
-    state["deposited_balance"] = balance
+    state["total_balance"] = balance
     save_state(state)
     return balance
 
 # Function to make a withdrawal
 def make_withdrawal(balance, amount):
     balance -= amount
-    state["deposited_balance"] = balance
+    state["total_balance"] = balance
     save_state(state)
     return balance
 
@@ -113,6 +124,17 @@ def display_status(status):
 # Function to display remaining credits
 def display_credit(credit):
     print(f"{credit} credits remaining.")
+
+# Function to reset the state
+def reset_state():
+    if os.path.isfile("state.json"):
+        os.remove("state.json")
+        print_green("State reset. The program will continue running.")
+        # Clear the populated_list
+        state["populated_list"] = []
+        save_state(state)
+    else:
+        print_red("No state file found. The program will continue running.")
 
 # Define a function to display the menu
 def display_menu():
@@ -128,24 +150,29 @@ def display_menu():
     print("9. Sell cryptocurrency")
     print("10. Make a deposit")
     print("11. Make a withdrawl")
+    print("12. Reset data")
 
 # Main program
 if __name__ == "__main__":
     state = load_state()
     favorites_list = state["favorites"]
-    deposited_balance = state["deposited_balance"]
+    populated_list = state.get("populated_list", [])
+    total_balance = state.get("total_balance", 0)
 
     status = check_service_status()
     credit = check_service_credits()
+
+    if not populated_list:
+        pre_populate_list()
 
     display_credit(credit)
     display_status(status)
 
 
-
     while True:
+        print_green(populated_list)
         display_menu()
-        choice = input("Select an option (1-11) or 0 to exit the program: ")
+        choice = input("Select an option (1-12) or 0 to exit the program: ")
 
         try:
             choice = int(choice)
@@ -197,7 +224,7 @@ if __name__ == "__main__":
             elif choice == 5:
                 print("Option 5 selected.")
                 # (Option to display the total deposited balance)
-                display_deposited_balance(deposited_balance)
+                display_deposited_balance(total_balance)
             elif choice == 6:
                 print("Option 6 selected.")
             elif choice == 7:
@@ -208,24 +235,28 @@ if __name__ == "__main__":
                 print("Option 9 selected.")
             elif choice == 10:
                 # Make a deposit
-                print_green(f"Current amount is ${deposited_balance:.2f}")
+                print_green(f"Current amount is ${total_balance:.2f}")
                 deposit_amount = float(input("Enter the deposit amount: $"))
                 if deposit_amount <= 0:
                     print_red("Invalid deposit amount.")
                 else:
-                    deposited_balance = make_deposit(deposited_balance, deposit_amount)
+                    total_balance = make_deposit(total_balance, deposit_amount)
                     print_green(f"Successfully deposited ${deposit_amount:.2f}.")
-                    print_green(f"The total balance is now: ${deposited_balance:.2f}.")
+                    print_green(f"The total balance is now: ${total_balance:.2f}.")
             elif choice == 11:
                 print("Option 11 selected.") # Make a withdrawal
-                print_green(f"Current amount is ${deposited_balance:.2f}")
+                print_green(f"Current amount is ${total_balance:.2f}")
                 withdrawal_amount = float(input("Enter the withdrawal amount: $"))
-                if withdrawal_amount <= 0 or withdrawal_amount > deposited_balance:
+                if withdrawal_amount <= 0 or withdrawal_amount > total_balance:
                     print_red("Invalid withdrawal amount.")
                 else:
-                    deposited_balance = make_withdrawal(deposited_balance, withdrawal_amount)
+                    total_balance = make_withdrawal(total_balance, withdrawal_amount)
                     print_green(f"Successfully withdrew ${withdrawal_amount:.2f}.")
-                    print_green(f"The total balance is now: ${deposited_balance:.2f}.")
+                    print_green(f"The total balance is now: ${total_balance:.2f}.")
+            elif choice == 12:
+                reset_state()
+
+
             elif choice == 0:
                 print_green(f"\nYou selected Option {choice}. The program will now exit. Thank you.\n")
                 break
