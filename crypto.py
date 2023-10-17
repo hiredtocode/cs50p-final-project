@@ -45,10 +45,15 @@ def check_coins_list():
 
 # Add to the favorites list
 def add_to_favorites(code):
-    favorites_list.append(code)
-    state["favorites"] = favorites_list
-    save_state(state)
-    print_green(f"Successfully added {code} to the favorites list.")
+    favorites_set = set(state["favorites"])
+    if code in favorites_set:
+        print_red(f"{code} is already in your favorites list.")
+    else:
+        favorites_set.add(code)
+        state["favorites"] = list(favorites_set)  # Convert back to a list
+        save_state(state)
+        print_green(f"Successfully added {code} to the favorites list.")
+
 
 # Pre-populate available list
 def pre_populate_list():
@@ -64,15 +69,13 @@ def pre_populate_list():
 
 # Function to remove a cryptocurrency from favorites
 def remove_from_favorites(code):
-    if not favorites_list:
-        print_green(f"Your favorites list is currently empty.")
-        return
-    elif code in favorites_list:
-        favorites_list.remove(code)
-        state["favorites"] = favorites_list
+    favorites_set = set(state["favorites"])
+    if code in favorites_set:
+        favorites_set.remove(code)
+        state["favorites"] = list(favorites_set)  # Convert back to a list
         save_state(state)
-        print_green(f" Successfully removed {code} from the favorites list.")
-        print_green(f"Current favorite list contains: {favorites_list}")
+        print_green(f"Successfully removed {code} from the favorites list.")
+        print_green(f"Current favorite list contains: {state['favorites']}")
     else:
         print_red(f"{code} is not in your favorites list.")
         return
@@ -180,54 +183,68 @@ if __name__ == "__main__":
     display_credit(credit)
     display_status(status)
 
-
     while True:
         display_menu()
         choice = input("Select an option (1-12) or 0 to exit the program: ")
 
         try:
             choice = int(choice)
+
             if choice == 1:
                 coins_list = check_coins_list()
                 print("Top 10 coins list:")
-                for coin in coins_list:
+                for i, coin in enumerate(coins_list[:10], 1):
                     code = coin['code']
                     rate = "{:,.2f}".format(coin['rate'])
-                    print_green(f"{code} ${rate} USD")
+                    print_green(f"{i}. {code} ${rate} USD")
+
+                input("Press Enter to continue...")
             elif choice == 2:
                 while True:
+                    print("Option 2 selected.")
+                    print("Select a cryptocurrency to add to your favorites:")
+                    for i, coin in enumerate(populated_list, 1):
+                        print(f"{i}. {coin}")
+                    print("Enter the corresponding number, or 'q' to quit.")
+
+                    coin_choice = input("Your choice: ")
+                    if coin_choice == "q":
+                        break  # Return to the main menu
                     try:
-                        print("Option 2 selected.")
-                        coin_name = input("What is the acronym of the coin name? ").strip().upper()
-                        if coin_name == "Q":
-                            break  # Return to the main menu
-                        if not coin_name or not coin_name.isalpha():
-                            print_red("Sorry, you must enter a valid acronym of the coin name or 'q' to quit.\n")
-                        else:
+                        coin_choice = int(coin_choice)
+                        if 1 <= coin_choice <= len(populated_list):
+                            coin_name = populated_list[coin_choice - 1]
                             add_to_favorites(coin_name)
-                            print_green(f"Updated favorites list result is: {favorites_list}")
+                            print_green(f"Updated favorites list result is: {state['favorites']}")
                             break  # Successfully added, return to the main menu
+                        else:
+                            print_red("Invalid number. Please enter a valid number or 'q' to quit.")
                     except ValueError:
-                        print_red("Invalid input. Please enter a valid acronym of the coin name or 'q' to quit.\n")
+                        print_red("Invalid input. Please enter a valid number or 'q' to quit.")
             elif choice == 3:
-                if not favorites_list:
-                    print_red(f"\nSorry, this option is unavailable if the list is empty.\n")
+                if not state["favorites"]:
+                    print_red("Your favorites list is currently empty.")
                 else:
                     while True:
-                        print_green(f"Current favorites list contains: {favorites_list}")
+                        print("Option 3 selected.")
+                        print("Select a cryptocurrency to remove from your favorites:")
+                        for i, coin in enumerate(state["favorites"], 1):
+                            print(f"{i}. {coin}")
+                        print("Enter the corresponding number, or 'q' to quit.")
+
+                        coin_choice = input("Your choice: ")
+                        if coin_choice == "q":
+                            break  # Return to the main menu
                         try:
-                            print("Option 3 selected.")
-                            coin_name = input("Which coin would you like to remove? q to quit: ").strip().upper()
-                            if coin_name == "Q":
-                                break  # Return to the main menu
-                            if not coin_name or not coin_name.isalpha():
-                                print_red("\nSorry, you must enter a valid acronym of the coin name or 'q' to quit.\n")
-                                break
-                            else:
+                            coin_choice = int(coin_choice)
+                            if 1 <= coin_choice <= len(state["favorites"]):
+                                coin_name = state["favorites"][coin_choice - 1]
                                 remove_from_favorites(coin_name)
-                                break  # Successfully added, return to the main menu
+                                break  # Successfully removed, return to the main menu
+                            else:
+                                print_red("Invalid number. Please enter a valid number or 'q' to quit.")
                         except ValueError:
-                            print_red("Invalid input. Please enter a valid acronym of the coin name or 'q' to quit.\n")
+                            print_red("Invalid input. Please enter a valid number or 'q' to quit.")
             elif choice == 4:
                 if not favorites_list:
                     print_red(f"\nSorry, your favorite list is empty.\n")
@@ -271,6 +288,7 @@ if __name__ == "__main__":
                 print_green(f"\nYou selected Option {choice}. The program will now exit. Thank you.\n")
                 break
             else:
-                print_red("Invalid choice. Please select a number between 1 and 11 or 0 to exit the program.")
+                print_red("Invalid choice. Please select a number between 1 and 12 or 0 to exit the program.")
         except ValueError:
             print_red("Invalid input. Please enter a number.")
+
