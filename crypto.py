@@ -43,23 +43,26 @@ def check_coins_list():
 
     response = requests.request("POST", url, headers=headers, data=payload)
     response_data = json.loads(response.text)
+
     return response_data
 
 # Add to the favorites list
 def add_to_favorites(code):
+    global favorites_list
     favorites_set = set(state["favorites"])
     if code in favorites_set:
         print_red(f"{code} is already in your favorites list.")
     else:
         favorites_set.add(code)
         state["favorites"] = list(favorites_set)  # Convert back to a list
+        favorites_list = state["favorites"]  # Update favorites_list
         save_state(state)
         print_green(f"Successfully added {code} to the favorites list.")
 
 
 # Pre-populate available list
 def pre_populate_list():
-    coins_list = check_coins_list()
+    # coins_list = check_coins_list()
     print_green("\nPre-populating the coins list...")
     for coin in coins_list:
         code = coin['code']
@@ -71,10 +74,12 @@ def pre_populate_list():
 
 # Function to remove a cryptocurrency from favorites
 def remove_from_favorites(code):
+    global favorites_list
     favorites_set = set(state["favorites"])
     if code in favorites_set:
         favorites_set.remove(code)
         state["favorites"] = list(favorites_set)  # Convert back to a list
+        favorites_list = state["favorites"]  # Update favorites_list
         save_state(state)
         print_green(f"Successfully removed {code} from the favorites list.")
         print_green(f"Current favorite list contains: {state['favorites']}")
@@ -214,7 +219,6 @@ if __name__ == "__main__":
                     rate = "{:,.2f}".format(coin['rate'])
                     print_green(f"{i}. {code} ${rate} USD")
 
-                input("\nPress Enter to continue...\n")
             elif choice == 2:
                 while True:
                     print("Option 2 selected.")
