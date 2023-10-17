@@ -160,7 +160,7 @@ def display_credit(credit):
 
 # Function to reset the state
 def reset_state():
-    global state, favorites_list, total_balance, populated_list
+    global state, favorites_list, total_balance, coins_list  # Update coins_list as a global variable
 
     if os.path.isfile("state.json"):
         os.remove("state.json")
@@ -168,7 +168,11 @@ def reset_state():
         state = {"favorites": [], "total_balance": 0, "populated_list": []}
         favorites_list = state["favorites"]
         total_balance = state.get("total_balance", 0)
-        populated_list = state["populated_list"]
+
+        # Make a new API call to update the coins_list
+        coins_list = check_coins_list()
+        state["coins_list"] = coins_list
+
         pre_populate_list()
         print_green(f"The total balance and your favorites list has successfully reset.")
         save_state(state)
