@@ -17,7 +17,7 @@ def load_state():
     if os.path.isfile("state.json"):
         with open("state.json", "r") as file:
             return json.load(file)
-    return {"favorites": [], "total_balance": 0}
+    return {"favorites": [], "total_balance": 0, "coins_list": []}
 
 # Function to save the entire state to a file
 def save_state(state):
@@ -29,22 +29,40 @@ def check_coins_list():
     url = "https://api.livecoinwatch.com/coins/list"
 
     payload = json.dumps({
-    "currency": "USD",
-    "sort": "rank",
-    "order": "ascending",
-    "offset": 0,
-    "limit": 10,
-    "meta": False
+        "currency": "USD",
+        "sort": "rank",
+        "order": "ascending",
+        "offset": 0,
+        "limit": 10,
+        "meta": False
     })
     headers = {
-    'content-type': 'application/json',
-    'x-api-key': 'bd95c726-08ea-447d-94e5-00088cf86908'
+        'content-type': 'application/json',
+        'x-api-key': 'bd95c726-08ea-447d-94e5-00088cf86908'
     }
 
     response = requests.request("POST", url, headers=headers, data=payload)
     response_data = json.loads(response.text)
 
     return response_data
+
+# Function to add retrieved coins list to the state
+def add_coins_list_to_state():
+    coins_list = check_coins_list()
+    state["coins_list"] = coins_list
+    save_state(state)
+
+# Function to display the coins list from the state
+def display_coins_list():
+    coins_list = state.get("coins_list", [])
+    if coins_list:
+        print("Top 10 coins list:")
+        for i, coin in enumerate(coins_list[:10], 1):
+            code = coin['code']
+            rate = "{:,.2f}".format(coin['rate'])
+            print_green(f"{i}. {code} ${rate} USD")
+    else:
+        print_red("Coins list not available. Please update it.")
 
 # Add to the favorites list
 def add_to_favorites(code):
@@ -188,7 +206,11 @@ if __name__ == "__main__":
     favorites_list = state["favorites"]
     populated_list = state.get("populated_list", [])
     total_balance = state.get("total_balance", 0)
-    coins_list = []
+
+    # Make the initial API request to get the coins list
+    coins_list = check_coins_list()
+    state["coins_list"] = coins_list
+    save_state(state)
 
     status = check_service_status()
     credit = check_service_credits()
@@ -212,13 +234,7 @@ if __name__ == "__main__":
             choice = int(choice)
 
             if choice == 1:
-                coins_list = check_coins_list()
-                print("Top 10 coins list:")
-                for i, coin in enumerate(coins_list[:10], 1):
-                    code = coin['code']
-                    rate = "{:,.2f}".format(coin['rate'])
-                    print_green(f"{i}. {code} ${rate} USD")
-
+                display_coins_list()
             elif choice == 2:
                 while True:
                     print("Option 2 selected.")
@@ -249,7 +265,7 @@ if __name__ == "__main__":
                         print("Option 3 selected.")
                         print("Select a cryptocurrency to remove from your favorites:")
                         for i, coin in enumerate(state["favorites"], 1):
-                            print(f"{i}. {coin}")
+                            print_green(f"{i}. {coin}")
                         print("Enter the corresponding number, or 'q' to quit.")
 
                         coin_choice = input("Your choice: ")
