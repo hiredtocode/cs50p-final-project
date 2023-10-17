@@ -1,6 +1,8 @@
+import time
 import requests
 import json
 import os
+import threading
 
 # Function to print text in green
 def print_green(text):
@@ -150,6 +152,14 @@ def reset_state():
     else:
         print_red("No state file found. The program will continue running.")
 
+# Function to update the coins list in the background
+def update_coins_list():
+    global coins_list  # Make the coins_list variable global
+
+    while True:
+        coins_list = check_coins_list()
+        # Sleep for a while before updating again
+        time.sleep(60)  # Adjust the sleep duration as needed
 
 # Define a function to display the menu
 def display_menu():
@@ -173,6 +183,7 @@ if __name__ == "__main__":
     favorites_list = state["favorites"]
     populated_list = state.get("populated_list", [])
     total_balance = state.get("total_balance", 0)
+    coins_list = []
 
     status = check_service_status()
     credit = check_service_credits()
@@ -182,6 +193,11 @@ if __name__ == "__main__":
 
     display_credit(credit)
     display_status(status)
+
+    # Start the background thread to update the coins list
+    coins_thread = threading.Thread(target=update_coins_list)
+    coins_thread.daemon = True  # This allows the thread to exit when the main program exits
+    coins_thread.start()
 
     while True:
         display_menu()
@@ -198,7 +214,7 @@ if __name__ == "__main__":
                     rate = "{:,.2f}".format(coin['rate'])
                     print_green(f"{i}. {code} ${rate} USD")
 
-                input("Press Enter to continue...")
+                input("\nPress Enter to continue...\n")
             elif choice == 2:
                 while True:
                     print("Option 2 selected.")
