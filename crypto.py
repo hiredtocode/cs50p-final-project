@@ -4,6 +4,9 @@ import json
 import os
 import threading
 
+# Define the state variable
+state = {}
+
 # Function to print text in green
 def print_green(text):
     print(f"\033[92m{text}\033[0m")
@@ -12,12 +15,25 @@ def print_green(text):
 def print_red(text):
     print(f"\033[91m{text}\033[0m")
 
+# Function to print text in blue
+def print_blue(text):
+    print(f"\033[94m{text}\033[0m")
+
 # Function to load the entire state from a file
 def load_state():
     if os.path.isfile("state.json"):
         with open("state.json", "r") as file:
-            return json.load(file)
-    return {"favorites": [], "total_balance": 0, "coins_list": []}
+            state = json.load(file)
+    else:
+        state = {
+            "favorites": [],
+            "total_balance": 0,
+            "coins_list": [],
+            "bought_history": [],  # Initialize bought history as an empty list
+            "sold_history": [],    # Initialize sold history as an empty list
+        }
+    return state
+
 
 # Function to save the entire state to a file
 def save_state(state):
@@ -42,6 +58,11 @@ def check_coins_list():
     }
 
     response = requests.request("POST", url, headers=headers, data=payload)
+
+        # Print the API response for debugging
+    print("API Response:")
+    print(response.text)
+
     response_data = json.loads(response.text)
 
     return response_data
@@ -76,7 +97,6 @@ def add_to_favorites(code):
         favorites_list = state["favorites"]  # Update favorites_list
         save_state(state)
         print_green(f"Successfully added {code} to the favorites list.")
-
 
 # Pre-populate available list
 def pre_populate_list():
@@ -160,24 +180,24 @@ def display_credit(credit):
 
 # Function to reset the state
 def reset_state():
-    global state, favorites_list, total_balance, coins_list  # Update coins_list as a global variable
+    global state, favorites_list, total_balance, coins_list, populated_list  # Update these variables as global
 
-    if os.path.isfile("state.json"):
-        os.remove("state.json")
-        print_green("State reset. The program will continue running.")
-        state = {"favorites": [], "total_balance": 0, "populated_list": []}
-        favorites_list = state["favorites"]
-        total_balance = state.get("total_balance", 0)
+    state = {
+        "favorites": [],
+        "total_balance": 0,
+        "coins_list": [],
+        "bought_history": [],  # Initialize bought history as an empty list
+        "sold_history": [],    # Initialize sold history as an empty list
+    }
 
-        # Make a new API call to update the coins_list
-        coins_list = check_coins_list()
-        state["coins_list"] = coins_list
-
-        pre_populate_list()
-        print_green(f"The total balance and your favorites list has successfully reset.")
-        save_state(state)
-    else:
-        print_red("No state file found. The program will continue running.")
+    favorites_list = state["favorites"]
+    coins_list = check_coins_list()  # Update coins_list by making an API call
+    state["coins_list"] = coins_list
+    total_balance = 0  # Reset total_balance to 0
+    populated_list = []  # Reset populated_list
+    pre_populate_list()  # Populate it again
+    print_green("The state has been successfully reset to default values.")
+    save_state(state)
 
 # Function to update the coins list in the background
 def update_coins_list():
@@ -187,6 +207,114 @@ def update_coins_list():
         coins_list = check_coins_list()
         # Sleep for a while before updating again
         time.sleep(60)  # Adjust the sleep duration as needed
+
+# Initialize total_assets as an empty dictionary
+total_assets = {}
+
+# Function to buy cryptocurrency
+def buy_cryptocurrency():
+    global total_balance
+    print("Option 8 selected - Buy cryptocurrency")
+    display_coins_list()
+
+    while True:
+        try:
+            choice = int(input("Select a cryptocurrency to buy (enter the corresponding number): "))
+            if 1 <= choice <= len(coins_list):
+                selected_coin = coins_list[choice - 1]
+                break
+            else:
+                print_red("Invalid choice. Please select a valid number.")
+        except ValueError:
+            print_red("Invalid input. Please enter a number.")
+
+    while True:
+        try:
+            amount_to_buy = float(input(f"Enter the amount of {selected_coin['code']} to buy (USD): $"))
+            if amount_to_buy > 0:
+                coin_name = selected_coin['code']
+                quantity = amount_to_buy / selected_coin['rate']
+
+                # Update the total_balance by deducting the purchase amount
+                total_balance -= amount_to_buy  # Deduct the purchase amount from the total_balance
+                state["total_balance"] = total_balance  # Update the total_balance in the state
+
+                # Update the total_assets dictionary with the newly bought coin and quantity
+                if coin_name in total_assets:
+                    total_assets[coin_name] += quantity
+                else:
+                    total_assets[coin_name] = quantity
+
+                state["total_assets"] = total_assets
+                save_state(state)
+
+                # Get the current timestamp
+                timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+
+                state["bought_history"].append((timestamp, coin_name, quantity, amount_to_buy))  # Record the transaction
+                save_state(state)
+
+                print_green(f"Successfully bought ${amount_to_buy:.2f} worth of {coin_name}.")
+                print_green(f"The new total amount of owned coins is: {total_assets[coin_name]:.6f} {coin_name}")
+                print_green(f"Your new total balance in USD is {total_balance}")
+                return total_balance  # Return the updated total balance
+            else:
+                print_red("Invalid amount. Please enter a positive value.")
+        except ValueError:
+            print_red("Invalid input. Please enter a valid number.")
+
+def sell_cryptocurrency():
+    print("Option 9 selected - Sell cryptocurrency.")
+    # display_favorites()
+
+    # Append the transaction details to the sold history
+    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+    state["sold_history"].append((timestamp, coin_name, quantity, selling_amount))
+    save_state(state)
+
+# Function to check the total assets
+def check_total_assets():
+    total_assets = state.get("total_assets", {})
+    total_balance = state.get("total_balance")
+
+    if not total_assets and not total_balance:
+        print_red("You currently own no cryptocurrencies.")
+        print_red("You currently own no USD.")
+    elif not total_assets:
+        print_red("You currently own no cryptocurrencies.")
+    elif not total_balance:
+        print_green(f"You currently own {total_assets}.")
+        print_red("You currently own no USD.")
+
+    else:
+        print_green("\nYour total assets:")
+        total_amount_in_usd = 0
+        for code, quantity in total_assets.items():
+            coin_info = [coin for coin in coins_list if coin['code'] == code][0]  # Get coin info by code
+            total_amount_in_usd += quantity * coin_info['rate']
+            print_green(f"{code}: {quantity} {code} | Current Value in USD is: ${quantity * coin_info['rate']:.2f}")
+
+# Function to display transaction history
+def display_transaction_history():
+    bought_history = state.get("bought_history", [])
+    sold_history = state.get("sold_history", [])
+
+    if not bought_history and not sold_history:
+        print_red("\nPlease make a transaction first to view the transaction history.\n")
+    else:
+        print("Transaction History:")
+        if bought_history:
+            print("Bought Histories:")
+            for history in bought_history:
+                timestamp, coin, quantity, price = history
+                print_blue(f"Timestamp: {timestamp} | Bought: {quantity} {coin} | Price: ${price:.2f} USD")
+
+        if sold_history:
+            print("Sold Histories:")
+            for history in sold_history:
+                timestamp, coin, quantity, price = history
+                print_red(f"Timestamp: {timestamp} | Sold: {quantity} {coin} | Price: ${price:.2f} USD")
+
 
 # Define a function to display the menu
 def display_menu():
@@ -203,6 +331,8 @@ def display_menu():
     print("10. Make a deposit")
     print("11. Make a withdrawl")
     print("12. Reset data")
+    print("13. Total assets")
+    print("14. Transaction History")
 
 # Main program
 if __name__ == "__main__":
@@ -232,7 +362,7 @@ if __name__ == "__main__":
 
     while True:
         display_menu()
-        choice = input("Select an option (1-12) or 0 to exit the program: ")
+        choice = input("Select an option (1-14) or 0 to exit the program: ")
 
         try:
             choice = int(choice)
@@ -299,12 +429,12 @@ if __name__ == "__main__":
             elif choice == 7:
                 print("Option 7 selected.")
             elif choice == 8:
-                print("Option 8 selected.")
+                buy_cryptocurrency()
             elif choice == 9:
                 print("Option 9 selected.")
             elif choice == 10:
                 # Make a deposit
-                print_green(f"Current amount is ${total_balance:.2f}")
+                print_green(f"Current balance is ${total_balance:.2f}")
                 deposit_amount = float(input("Enter the deposit amount: $"))
                 if deposit_amount <= 0:
                     print_red("Invalid deposit amount.")
@@ -324,6 +454,10 @@ if __name__ == "__main__":
                     print_green(f"The total balance is now: ${total_balance:.2f}.")
             elif choice == 12:
                 reset_state()
+            elif choice == 13:
+                check_total_assets()
+            elif choice == 14:
+                display_transaction_history()
             elif choice == 0:
                 print_green(f"\nYou selected Option {choice}. The program will now exit. Thank you.\n")
                 break
