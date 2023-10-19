@@ -31,7 +31,8 @@ def load_state():
             "coins_list": [],
             "bought_history": [],
             "sold_history": [],
-            "total_assets": {}
+            "total_assets": {},
+            "grand_total": 0,
         }
     return state
 
@@ -61,9 +62,9 @@ def check_coins_list():
 
     response = requests.request("POST", url, headers=headers, data=payload)
 
-        # Print the API response for debugging
-    print("API Response:")
-    print(response.text)
+    # Print the API response for debugging
+    # print("API Response:")
+    # print(response.text)
 
     response_data = json.loads(response.text)
 
@@ -269,54 +270,11 @@ def buy_cryptocurrency():
         except ValueError:
             print_red("Invalid input. Please enter a valid number.")
 
-# Initialize total_assets as an empty dictionary
-if "total_assets" not in state:
-    state["total_assets"] = {}
-
-def sell_cryptocurrency():
-    global total_balance
-    print("Option 9 selected - Sell cryptocurrency")
-    display_total_assets()  # Display the cryptocurrencies you currently own
-
-    while True:
-        try:
-            choice = input("Select a cryptocurrency to sell (enter the code): ")
-            quantity = float(input(f"Enter the quantity of {choice} to sell: "))
-            if quantity <= 0:
-                print_red("Invalid quantity. Please enter a positive value.")
-                continue
-
-            if choice in state.get("total_assets", {}):
-                coin_info = [coin for coin in coins_list if coin['code'] == choice][0]
-                selling_amount = quantity * coin_info['rate']
-
-                # Update the total_balance by adding the selling amount
-                total_balance += selling_amount
-                state["total_balance"] = total_balance
-
-                # Update the total_assets dictionary with the newly sold coin and quantity
-                state["total_assets"][choice] -= quantity
-
-                # Get the current timestamp
-                timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-
-                # Append the transaction details to the sold history
-                state["sold_history"].append((timestamp, choice, quantity, selling_amount))
-
-                save_state(state)
-
-                print_green(f"Successfully sold {quantity} {choice} for ${selling_amount:.2f}.")
-                print_green(f"Your new total balance in USD is ${total_balance}")
-            else:
-                print_red(f"You don't own any {choice}.")
-            break
-        except ValueError:
-            print_red("Invalid input. Please enter valid values.")
-
-# Function to check the total assets
 def check_total_assets():
     total_assets = state.get("total_assets", {})
     total_balance = state.get("total_balance", 0)
+
+    grand_total = total_balance  # Initialize grand total with the total balance
 
     if not total_assets and total_balance == 0:
         print_red("You currently own no cryptocurrencies.")
@@ -331,6 +289,9 @@ def check_total_assets():
             print_green(f"{code}: {formatted_quantity} {code} | Value in USD: ${value_in_usd:.2f}")
         print_green(f"Total Value in USD of all assets: ${total_value_in_usd:.2f} in cryptocurrency")
         print_green(f"Total Balance in USD: ${total_balance:.2f}")
+        grand_total += total_value_in_usd  # Add the total value of assets to the grand total
+        state["grand_total"] = grand_total  # Update the state with the grand total
+        print_green(f"Grand Total in USD: ${grand_total:.2f}")
     else:
         print_green("\nYour assets:")
         total_amount_in_usd = 0
@@ -342,6 +303,148 @@ def check_total_assets():
             print_green(f"{code}: {formatted_quantity} {code} | Quantity Value in USD: ${value_in_usd:.2f}")
         print_green(f"Total Value in USD of all assets: ${total_amount_in_usd:.2f} in cryptocurrency")
         print_green(f"Total Balance in USD: ${total_balance:.2f}")
+        grand_total += total_amount_in_usd  # Add the total value of assets to the grand total
+        state["grand_total"] = grand_total  # Update the state with the grand total
+        print_green(f"Grand Total in USD: ${grand_total:.2f}")
+
+
+
+def display_total_assets():
+    total_assets = state.get("total_assets", {})
+    if not total_assets:
+        print_red("You currently own no cryptocurrencies.")
+        print_red("You currently own no USD.")
+    else:
+        print_green("Your total assets:")
+        total_balance = state.get("total_balance", 0)
+
+        for code, quantity in total_assets.items():
+            coin_info = [coin for coin in coins_list if coin['code'] == code][0]
+            formatted_quantity = "{:.6f}".format(quantity)
+            value_in_usd = quantity * coin_info['rate']
+            print_green(f"{code}: {formatted_quantity} {code} | Value in USD: ${value_in_usd:.2f}")
+
+        print_green(f"Total Value in USD of all assets: ${total_balance:.2f} in cryptocurrency")
+        print_green(f"Total Balance in USD: ${total_balance:.2f}")
+
+# Initialize total_assets as an empty dictionary
+if "total_assets" not in state:
+    state["total_assets"] = {}
+
+# Existing code for sell_cryptocurrency
+# Existing code for sell_cryptocurrency
+def sell_cryptocurrency():
+    global total_balance
+    print("Option 9 selected - Sell cryptocurrency")
+
+    while True:
+        # Display the list of assets the user owns
+        check_total_assets()
+
+        assets = state.get("total_assets", {})
+        asset_codes = list(assets.keys())
+
+        if not assets:
+            print_red("You currently own no cryptocurrencies.")
+            return  # Return to the main menu
+
+        print("Select a cryptocurrency to sell:")
+        for i, code in enumerate(asset_codes, 1):
+            coin_info = [coin for coin in coins_list if coin['code'] == code][0]
+            value_in_usd = assets[code] * coin_info['rate']
+            print_green(f"{i}. {code} | Value in USD: ${value_in_usd:.2f}")
+
+        print("Enter the corresponding number or 0 to return to the main menu: ")
+
+        try:
+            choice = input()
+            if choice == "0":
+                return  # Return to the main menu
+            choice = int(choice)
+
+            if 1 <= choice <= len(asset_codes):
+                selected_code = asset_codes[choice - 1]
+                coin_info = [coin for coin in coins_list if coin['code'] == selected_code][0]
+
+                # Calculate the current value of the selected cryptocurrency
+                current_value = assets[selected_code] * coin_info['rate']
+
+                print_green(f"You currently own {assets[selected_code]:.6f} {selected_code} valued at ${current_value:.2f} USD")
+
+                while True:
+                    try:
+                        amount_to_sell = float(input(f"Enter the amount of {selected_code} to sell (USD): $"))
+                        if amount_to_sell <= 0:
+                            print_red("Invalid amount. Please enter a positive value.")
+                            continue
+
+                        if amount_to_sell <= current_value:
+                            # Update the total balance by adding the selling amount
+                            total_balance += amount_to_sell
+                            state["total_balance"] = total_balance
+
+                            # Update the total_assets dictionary with the newly sold coin and quantity
+                            assets[selected_code] -= amount_to_sell / coin_info['rate']
+                            state["total_assets"] = assets
+
+                            # Get the current timestamp
+                            timestamp = time.strftime("%Y-%m-d %H:%M:%S")
+
+                            # Append the transaction details to the sold history
+                            state["sold_history"].append((timestamp, selected_code, amount_to_sell / coin_info['rate'], amount_to_sell))
+                            save_state(state)
+
+                            print_green(f"\nSuccessfully sold ${amount_to_sell:.2f} worth of {selected_code}.\n")
+                            check_total_assets()
+                            return  # Return to the main menu
+
+                        else:
+                            print_red("Insufficient balance. Please enter a lower amount.")
+                    except ValueError:
+                        print_red("Invalid input. Please enter a valid number.")
+            else:
+                print_red("Invalid choice. Please select a valid number.")
+        except ValueError:
+            print_red("Invalid input. Please enter a number or 0 to return to the main menu.")
+
+# Function to check the total assets
+def check_total_assets():
+    total_assets = state.get("total_assets", {})
+    total_balance = state.get("total_balance", 0)
+
+    grand_total = total_balance  # Initialize grand total with the total balance
+
+    if not total_assets and total_balance == 0:
+        print_red("You currently own no cryptocurrencies.")
+        print_red("You currently own no USD.")
+    elif not total_assets:
+        total_value_in_usd = 0
+        for code, quantity in total_assets.items():
+            coin_info = [coin for coin in coins_list if coin['code'] == code][0]
+            formatted_quantity = "{:.6f}".format(quantity)
+            value_in_usd = quantity * coin_info['rate']
+            total_value_in_usd += value_in_usd
+            print_green(f"{code}: {formatted_quantity} {code} | Value in USD: ${value_in_usd:.2f}")
+        print_green(f"Total Value in USD of all assets: ${total_value_in_usd:.2f} in cryptocurrency")
+        print_green(f"Total Balance in USD: ${total_balance:.2f}")
+        grand_total += total_value_in_usd  # Add the total value of assets to the grand total
+        state["grand_total"] = grand_total  # Update the state with the grand total
+        print_green(f"Grand Total in USD: ${grand_total:.2f}")
+    else:
+        print_green("\nYour assets:")
+        total_amount_in_usd = 0
+        for code, quantity in total_assets.items():
+            coin_info = [coin for coin in coins_list if coin['code'] == code][0]
+            formatted_quantity = "{:.6f}".format(quantity)
+            value_in_usd = quantity * coin_info['rate']
+            total_amount_in_usd += value_in_usd
+            print_green(f"{code}: {formatted_quantity} {code} | Quantity Value in USD: ${value_in_usd:.2f}")
+        print_green(f"Total Value in USD of all assets: ${total_amount_in_usd:.2f} in cryptocurrency")
+        print_green(f"Total Balance in USD: ${total_balance:.2f}")
+        grand_total += total_amount_in_usd  # Add the total value of assets to the grand total
+        state["grand_total"] = grand_total  # Update the state with the grand total
+        print_green(f"Grand Total in USD (cryptocurrency + USD): ${grand_total:.2f}")
+
 
 
 # Function to display transaction history
