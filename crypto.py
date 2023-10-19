@@ -345,8 +345,7 @@ def display_total_assets():
 if "total_assets" not in state:
     state["total_assets"] = {}
 
-# Existing code for sell_cryptocurrency
-# Existing code for sell_cryptocurrency
+# Option 9
 def sell_cryptocurrency():
     global total_balance
     print("Option 9 selected - Sell cryptocurrency")
@@ -458,8 +457,6 @@ def check_total_assets():
         grand_total += total_amount_in_usd  # Add the total value of assets to the grand total
         state["grand_total"] = grand_total  # Update the state with the grand total
         print_green(f"Grand Total in USD (cryptocurrency + USD): ${grand_total:.2f}")
-
-
 
 # Function to display transaction history
 def display_transaction_history():
