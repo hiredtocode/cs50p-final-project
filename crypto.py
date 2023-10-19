@@ -160,6 +160,13 @@ def display_deposited_balance(balance):
 def make_deposit(balance, amount):
     balance += amount
     state["total_balance"] = balance
+
+    # Record the deposit in the transaction history
+    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+    deposit_history = state.get("deposit_history", [])
+    deposit_history.append((timestamp, amount))
+    state["deposit_history"] = deposit_history
+
     save_state(state)
     return balance
 
@@ -167,6 +174,13 @@ def make_deposit(balance, amount):
 def make_withdrawal(balance, amount):
     balance -= amount
     state["total_balance"] = balance
+
+    # Record the withdrawal in the transaction history
+    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+    withdraw_history = state.get("withdraw_history", [])
+    withdraw_history.append((timestamp, amount))
+    state["withdraw_history"] = withdraw_history
+
     save_state(state)
     return balance
 
@@ -394,7 +408,7 @@ def sell_cryptocurrency():
                             state["sold_history"].append((timestamp, selected_code, amount_to_sell / coin_info['rate'], amount_to_sell))
                             save_state(state)
 
-                            print_green(f"\nSuccessfully sold ${amount_to_sell:.2f} worth of {selected_code}.\n")
+                            print_green(f"\nSuccessfully sold ${amount_to_sell:.2f} worth of {selected_code}.")
                             check_total_assets()
                             return  # Return to the main menu
 
@@ -451,23 +465,45 @@ def check_total_assets():
 def display_transaction_history():
     bought_history = state.get("bought_history", [])
     sold_history = state.get("sold_history", [])
+    deposit_history = state.get("deposit_history", [])  # Added
+    withdraw_history = state.get("withdraw_history", [])  # Added
 
-    if not bought_history and not sold_history:
+    if not bought_history and not sold_history and not deposit_history and not withdraw_history:
         print_red("\nPlease make a transaction first to view the transaction history.\n")
     else:
         print("Transaction History:")
+
+        # Display bought histories
         if bought_history:
             print("Bought Histories:")
             for history in bought_history:
                 timestamp, coin, quantity, price = history
                 print_blue(f"Timestamp: {timestamp} | Bought: {quantity} {coin} | Price: ${price:.2f} USD")
 
+        # Display sold histories
         if sold_history:
             print("Sold Histories:")
             for history in sold_history:
                 timestamp, coin, quantity, price = history
                 print_red(f"Timestamp: {timestamp} | Sold: {quantity} {coin} | Price: ${price:.2f} USD")
 
+        # Display deposit histories
+        if deposit_history:  # Added
+            print("Deposit Histories:")
+            for history in deposit_history:
+                timestamp, amount = history
+                print("\033[94m", end="")  # Dark blue
+                print(f"Timestamp: {timestamp} | Deposit: ${amount:.2f} USD")
+                print("\033[0m", end="")  # Reset color
+
+        # Display withdraw histories
+        if withdraw_history:  # Added
+            print("Withdraw Histories:")
+            for history in withdraw_history:
+                timestamp, amount = history
+                print("\033[95m", end="")  # Pink
+                print(f"Timestamp: {timestamp} | Withdraw: ${amount:.2f} USD")
+                print("\033[0m", end="")  # Reset color
 
 # Define a function to display the menu
 def display_menu():
