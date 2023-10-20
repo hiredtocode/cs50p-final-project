@@ -540,7 +540,7 @@ def display_transaction_history():
             print("Withdraw Histories:")
             for history in withdraw_history:
                 timestamp, amount = history
-                print("\033[95m", end="")  # Pink
+                print("\033[91m", end="")  # Red
                 print(f"Withdraw: ${amount:.2f} USD | Timestamp: {timestamp}")
                 print("\033[0m", end="")  # Reset color
 
