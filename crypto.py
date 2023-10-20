@@ -510,16 +510,14 @@ def display_menu():
     print("3. Remove a cryptocurrency from my favorites")
     print("4. Display my favorites")
     print("5. My total amount of USD")
-    print("6. My total amount of USD invested in coins")
+    print("6. Total assets")
     print("7. Current status of my Profit / Loss")
     print("8. Buy cryptocurrency")
     print("9. Sell cryptocurrency")
     print("10. Make a deposit")
     print("11. Make a withdrawl")
     print("12. Reset data")
-    print("13. Total assets")
-    print("14. Transaction History")
-
+    print("13. Transaction History")
 
 # Main program
 if __name__ == "__main__":
@@ -612,7 +610,7 @@ if __name__ == "__main__":
                 # (Option to display the total deposited balance)
                 display_deposited_balance(total_balance)
             elif choice == 6:
-                print("Option 6 selected.")
+                check_total_assets()
             elif choice == 7:
                 print("Option 7 selected.")
             elif choice == 8:
@@ -642,8 +640,6 @@ if __name__ == "__main__":
             elif choice == 12:
                 reset_state()
             elif choice == 13:
-                check_total_assets()
-            elif choice == 14:
                 display_transaction_history()
             elif choice == 0:
                 print_green(f"\nYou selected Option {choice}. The program will now exit. Thank you.\n")
