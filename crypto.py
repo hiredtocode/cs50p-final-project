@@ -349,7 +349,7 @@ def check_total_assets():
         print_green(f"Total Balance in fiat: ${total_balance:.2f}")
         grand_total += total_value_in_usd  # Add the total value of assets to the grand total
         state["grand_total"] = grand_total  # Update the state with the grand total
-        print_green(f"Grand Total in fiat: ${grand_total:.2f}")
+        print_green(f"Grand Total in fiat: ${grand_total:.2f}\n")
     else:
         print_green("\nYour assets:")
         total_amount_in_usd = 0
@@ -498,7 +498,7 @@ def check_total_assets():
         print_green(f"Total Balance in fiat: ${total_balance:.2f}")
         grand_total += total_amount_in_usd  # Add the total value of assets to the grand total
         state["grand_total"] = grand_total  # Update the state with the grand total
-        print_green(f"Grand Total in fiat (cryptocurrency + USD): ${grand_total:.2f}")
+        print_green(f"Grand Total in fiat (cryptocurrency + fiat): ${grand_total:.2f}")
 
 # Function to display transaction history
 def display_transaction_history():
@@ -517,14 +517,14 @@ def display_transaction_history():
             print("Bought Histories:")
             for history in bought_history:
                 timestamp, coin, quantity, price = history
-                print_blue(f"Bought: {quantity} {coin} | Price: ${price:.2f} USD | Timestamp: {timestamp} ")
+                print_blue(f"Bought: {quantity} {coin} | Price: ${price:.2f} USD | Timestamp: {timestamp}")
 
         # Display sold histories
         if sold_history:
             print("Sold Histories:")
             for history in sold_history:
                 timestamp, coin, quantity, price = history
-                print_red(f"Sold: {quantity} {coin} | Price: ${price:.2f} USD | Timestamp: {timestamp} |")
+                print_red(f"Sold: {quantity} {coin} | Price: ${price:.2f} USD | Timestamp: {timestamp}")
 
         # Display deposit histories
         if deposit_history:  # Added
@@ -532,7 +532,7 @@ def display_transaction_history():
             for history in deposit_history:
                 timestamp, amount = history
                 print("\033[94m", end="")  # Dark blue
-                print(f"Deposit: ${amount:.2f} USD | Timestamp: {timestamp} |")
+                print(f"Deposit: ${amount:.2f} USD | Timestamp: {timestamp}")
                 print("\033[0m", end="")  # Reset color
 
         # Display withdraw histories
@@ -541,7 +541,7 @@ def display_transaction_history():
             for history in withdraw_history:
                 timestamp, amount = history
                 print("\033[95m", end="")  # Pink
-                print(f"Withdraw: ${amount:.2f} USD | Timestamp: {timestamp} |")
+                print(f"Withdraw: ${amount:.2f} USD | Timestamp: {timestamp}")
                 print("\033[0m", end="")  # Reset color
 
 # Define a function to display the menu
@@ -678,7 +678,7 @@ if __name__ == "__main__":
                 print_green(f"Current amount is ${total_balance:.2f}")
                 withdrawal_amount = float(input("Enter the withdrawal amount: $"))
                 if withdrawal_amount <= 0 or withdrawal_amount > total_balance:
-                    print_red("Invalid withdrawal amount.")
+                    print_red("Insufficient fund.")
                 else:
                     total_balance = make_withdrawal(total_balance, withdrawal_amount)
                     print_green(f"Successfully withdrew ${withdrawal_amount:.2f}.")
