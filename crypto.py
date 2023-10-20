@@ -475,14 +475,14 @@ def display_transaction_history():
             print("Bought Histories:")
             for history in bought_history:
                 timestamp, coin, quantity, price = history
-                print_blue(f"Timestamp: {timestamp} | Bought: {quantity} {coin} | Price: ${price:.2f} USD")
+                print_blue(f"Bought: {quantity} {coin} | Price: ${price:.2f} USD | Timestamp: {timestamp} ")
 
         # Display sold histories
         if sold_history:
             print("Sold Histories:")
             for history in sold_history:
                 timestamp, coin, quantity, price = history
-                print_red(f"Timestamp: {timestamp} | Sold: {quantity} {coin} | Price: ${price:.2f} USD")
+                print_red(f"Sold: {quantity} {coin} | Price: ${price:.2f} USD | Timestamp: {timestamp} |")
 
         # Display deposit histories
         if deposit_history:  # Added
@@ -490,7 +490,7 @@ def display_transaction_history():
             for history in deposit_history:
                 timestamp, amount = history
                 print("\033[94m", end="")  # Dark blue
-                print(f"Timestamp: {timestamp} | Deposit: ${amount:.2f} USD")
+                print(f"Deposit: ${amount:.2f} USD | Timestamp: {timestamp} |")
                 print("\033[0m", end="")  # Reset color
 
         # Display withdraw histories
@@ -499,7 +499,7 @@ def display_transaction_history():
             for history in withdraw_history:
                 timestamp, amount = history
                 print("\033[95m", end="")  # Pink
-                print(f"Timestamp: {timestamp} | Withdraw: ${amount:.2f} USD")
+                print(f"Withdraw: ${amount:.2f} USD | Timestamp: {timestamp} |")
                 print("\033[0m", end="")  # Reset color
 
 # Define a function to display the menu
