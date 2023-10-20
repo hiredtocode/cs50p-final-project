@@ -275,7 +275,7 @@ def buy_cryptocurrency():
 
                 print_green(f"Successfully bought ${amount_to_buy:.2f} worth of {coin_name}.")
                 print_green(f"The new total amount of owned {coin_name} is: {state['total_assets'][coin_name]:.6f}")
-                print_green(f"Your new total balance in USD is {total_balance}")
+                print_green(f"Your new total balance in fiat is {total_balance}")
                 return total_balance
             else:
                 print_red("Insufficient balance. Please deposit more and try again. Loading main menu...")
@@ -283,6 +283,49 @@ def buy_cryptocurrency():
                 return
         except ValueError:
             print_red("Invalid input. Please enter a valid number.")
+
+# Option 7
+def display_profit_loss():
+    global total_balance
+
+    print("Option 7 selected - Display Profit / Loss")
+
+    total_assets = state.get("total_assets", {})
+    bought_history = state.get("bought_history", [])
+    coins_list = state.get("coins_list", [])
+
+    if not total_assets:
+        print_red("You currently own no cryptocurrencies.")
+        return
+
+    for code, quantity in total_assets.items():
+        coin_info = [coin for coin in coins_list if coin['code'] == code][0]
+        current_value = quantity * coin_info['rate']
+
+        # Calculate the initial purchase price and total purchase cost
+        purchase_price = 0
+        total_purchase_cost = 0
+        for history in bought_history:
+            timestamp, coin, hist_quantity, price = history
+            if coin == code:
+                purchase_price = price / hist_quantity  # Price per unit at the time of purchase
+                total_purchase_cost += price
+
+        # Calculate the current value and profit/loss
+        profit_loss = current_value - total_purchase_cost
+
+        # Determine whether it's a profit or loss
+        if profit_loss >= 0:
+            color = "\033[92m"  # Green for profit
+        else:
+            color = "\033[91m"  # Red for loss
+
+        formatted_quantity = "{:.6f}".format(quantity)
+        formatted_profit_loss = "{:.2f}".format(profit_loss)
+
+        print(f"{code}: {formatted_quantity} {code} | Current Value: ${current_value:.2f} USD | "
+              f"Purchase Price: ${purchase_price:.2f} USD | "
+              f"Profit/Loss: {color}${formatted_profit_loss} USD\033[0m")
 
 def check_total_assets():
     total_assets = state.get("total_assets", {})
@@ -300,12 +343,12 @@ def check_total_assets():
             formatted_quantity = "{:.6f}".format(quantity)
             value_in_usd = quantity * coin_info['rate']
             total_value_in_usd += value_in_usd
-            print_green(f"{code}: {formatted_quantity} {code} | Value in USD: ${value_in_usd:.2f}")
-        print_green(f"Total Value in USD of all assets: ${total_value_in_usd:.2f} in cryptocurrency")
-        print_green(f"Total Balance in USD: ${total_balance:.2f}")
+            print_green(f"{code}: {formatted_quantity} {code} | Value in fiat: ${value_in_usd:.2f}")
+        print_green(f"Total Value in fiat of all assets: ${total_value_in_usd:.2f} in cryptocurrency")
+        print_green(f"Total Balance in fiat: ${total_balance:.2f}")
         grand_total += total_value_in_usd  # Add the total value of assets to the grand total
         state["grand_total"] = grand_total  # Update the state with the grand total
-        print_green(f"Grand Total in USD: ${grand_total:.2f}")
+        print_green(f"Grand Total in fiat: ${grand_total:.2f}")
     else:
         print_green("\nYour assets:")
         total_amount_in_usd = 0
@@ -314,14 +357,12 @@ def check_total_assets():
             formatted_quantity = "{:.6f}".format(quantity)
             value_in_usd = quantity * coin_info['rate']
             total_amount_in_usd += value_in_usd
-            print_green(f"{code}: {formatted_quantity} {code} | Quantity Value in USD: ${value_in_usd:.2f}")
-        print_green(f"Total Value in USD of all assets: ${total_amount_in_usd:.2f} in cryptocurrency")
-        print_green(f"Total Balance in USD: ${total_balance:.2f}")
+            print_green(f"{code}: {formatted_quantity} {code} | Quantity Value in fiat: ${value_in_usd:.2f}")
+        print_green(f"Total Value in fiat of all assets: ${total_amount_in_usd:.2f} in cryptocurrency")
+        print_green(f"Total Balance in fiat: ${total_balance:.2f}")
         grand_total += total_amount_in_usd  # Add the total value of assets to the grand total
         state["grand_total"] = grand_total  # Update the state with the grand total
-        print_green(f"Grand Total in USD: ${grand_total:.2f}")
-
-
+        print_green(f"Grand Total in fiat: ${grand_total:.2f}")
 
 def display_total_assets():
     total_assets = state.get("total_assets", {})
@@ -336,10 +377,10 @@ def display_total_assets():
             coin_info = [coin for coin in coins_list if coin['code'] == code][0]
             formatted_quantity = "{:.6f}".format(quantity)
             value_in_usd = quantity * coin_info['rate']
-            print_green(f"{code}: {formatted_quantity} {code} | Value in USD: ${value_in_usd:.2f}")
+            print_green(f"{code}: {formatted_quantity} {code} | Value in fiat: ${value_in_usd:.2f}")
 
-        print_green(f"Total Value in USD of all assets: ${total_balance:.2f} in cryptocurrency")
-        print_green(f"Total Balance in USD: ${total_balance:.2f}")
+        print_green(f"Total Value in fiat of all assets: ${total_balance:.2f} in cryptocurrency")
+        print_green(f"Total Balance in fiat: ${total_balance:.2f}")
 
 # Initialize total_assets as an empty dictionary
 if "total_assets" not in state:
@@ -365,7 +406,7 @@ def sell_cryptocurrency():
         for i, code in enumerate(asset_codes, 1):
             coin_info = [coin for coin in coins_list if coin['code'] == code][0]
             value_in_usd = assets[code] * coin_info['rate']
-            print_green(f"{i}. {code} | Value in USD: ${value_in_usd:.2f}")
+            print_green(f"{i}. {code} | Value in fiat: ${value_in_usd:.2f}")
 
         print("Enter the corresponding number or 0 to return to the main menu: ")
 
@@ -437,12 +478,12 @@ def check_total_assets():
             formatted_quantity = "{:.6f}".format(quantity)
             value_in_usd = quantity * coin_info['rate']
             total_value_in_usd += value_in_usd
-            print_green(f"{code}: {formatted_quantity} {code} | Value in USD: ${value_in_usd:.2f}")
-        print_green(f"Total Value in USD of all assets: ${total_value_in_usd:.2f} in cryptocurrency")
-        print_green(f"Total Balance in USD: ${total_balance:.2f}")
+            print_green(f"{code}: {formatted_quantity} {code} | Value in fiat: ${value_in_usd:.2f}")
+        print_green(f"Total Value in fiat of all assets: ${total_value_in_usd:.2f} in cryptocurrency")
+        print_green(f"Total Balance in fiat: ${total_balance:.2f}")
         grand_total += total_value_in_usd  # Add the total value of assets to the grand total
         state["grand_total"] = grand_total  # Update the state with the grand total
-        print_green(f"Grand Total in USD: ${grand_total:.2f}")
+        print_green(f"Grand Total in fiat: ${grand_total:.2f}")
     else:
         print_green("\nYour assets:")
         total_amount_in_usd = 0
@@ -451,12 +492,12 @@ def check_total_assets():
             formatted_quantity = "{:.6f}".format(quantity)
             value_in_usd = quantity * coin_info['rate']
             total_amount_in_usd += value_in_usd
-            print_green(f"{code}: {formatted_quantity} {code} | Quantity Value in USD: ${value_in_usd:.2f}")
-        print_green(f"Total Value in USD of all assets: ${total_amount_in_usd:.2f} in cryptocurrency")
-        print_green(f"Total Balance in USD: ${total_balance:.2f}")
+            print_green(f"{code}: {formatted_quantity} {code} | Quantity Value in fiat: ${value_in_usd:.2f}")
+        print_green(f"Total Value in fiat of all assets: ${total_amount_in_usd:.2f} in cryptocurrency")
+        print_green(f"Total Balance in fiat: ${total_balance:.2f}")
         grand_total += total_amount_in_usd  # Add the total value of assets to the grand total
         state["grand_total"] = grand_total  # Update the state with the grand total
-        print_green(f"Grand Total in USD (cryptocurrency + USD): ${grand_total:.2f}")
+        print_green(f"Grand Total in fiat (cryptocurrency + USD): ${grand_total:.2f}")
 
 # Function to display transaction history
 def display_transaction_history():
@@ -560,7 +601,7 @@ if __name__ == "__main__":
                     print("Select a cryptocurrency to add to your favorites:")
                     for i, coin in enumerate(populated_list, 1):
                         print(f"{i}. {coin}")
-                    print("Enter the corresponding number, or 'q' to quit.")
+                    print("Enter the corresponding number, or '0' to return to the main menu.")
 
                     coin_choice = input("Your choice: ")
                     if coin_choice == "q":
@@ -573,9 +614,9 @@ if __name__ == "__main__":
                             print_green(f"Updated favorites list result is: {state['favorites']}")
                             break  # Successfully added, return to the main menu
                         else:
-                            print_red("Invalid number. Please enter a valid number or 'q' to quit.")
+                            print_red("Invalid number. Please enter a valid number or '0' to return to the main menu.")
                     except ValueError:
-                        print_red("Invalid input. Please enter a valid number or 'q' to quit.")
+                        print_red("Invalid input. Please enter a valid number or '0' to return to the main menu.")
             elif choice == 3:
                 if not state["favorites"]:
                     print_red("Your favorites list is currently empty.")
@@ -585,7 +626,7 @@ if __name__ == "__main__":
                         print("Select a cryptocurrency to remove from your favorites:")
                         for i, coin in enumerate(state["favorites"], 1):
                             print_green(f"{i}. {coin}")
-                        print("Enter the corresponding number, or 'q' to quit.")
+                        print("Enter the corresponding number, or '0' to return to the main menu.")
 
                         coin_choice = input("Your choice: ")
                         if coin_choice == "q":
@@ -597,9 +638,9 @@ if __name__ == "__main__":
                                 remove_from_favorites(coin_name)
                                 break  # Successfully removed, return to the main menu
                             else:
-                                print_red("Invalid number. Please enter a valid number or 'q' to quit.")
+                                print_red("Invalid number. Please enter a valid number or '0' to return to the main menu.")
                         except ValueError:
-                            print_red("Invalid input. Please enter a valid number or 'q' to quit.")
+                            print_red("Invalid input. Please enter a valid number or '0' to return to the main menu.")
             elif choice == 4:
                 if not favorites_list:
                     print_red(f"\nSorry, your favorite list is empty.\n")
@@ -612,7 +653,7 @@ if __name__ == "__main__":
             elif choice == 6:
                 check_total_assets()
             elif choice == 7:
-                print("Option 7 selected.")
+                display_profit_loss()
             elif choice == 8:
                 buy_cryptocurrency()
             elif choice == 9:
