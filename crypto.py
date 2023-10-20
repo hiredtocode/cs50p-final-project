@@ -84,7 +84,8 @@ def display_coins_list():
         for i, coin in enumerate(coins_list[:10], 1):
             code = coin['code']
             rate = "{:,.2f}".format(coin['rate'])
-            print_green(f"{i}. {code} ${rate} USD")
+            if code != "USDT":  # Skip displaying USDT
+                print_green(f"{i}. {code} ${rate} USD")
     else:
         print_red("Coins list not available. Please update it.")
 
@@ -643,9 +644,13 @@ if __name__ == "__main__":
                             print_red("Invalid input. Please enter a valid number or '0' to return to the main menu.")
             elif choice == 4:
                 if not favorites_list:
-                    print_red(f"\nSorry, your favorite list is empty.\n")
+                    print_red("Sorry, your favorites list is empty.")
                 else:
-                    print_green(f"\nFavorites list: {favorites_list}\n")
+                    print_green("Current Prices of Coins in Your Favorites:")
+                    for coin_code in favorites_list:
+                        coin_info = [coin for coin in coins_list if coin['code'] == coin_code][0]
+                        rate = coin_info['rate']
+                        print_green(f"{coin_code}: ${rate:.2f} USD")
             elif choice == 5:
                 print("Option 5 selected.")
                 # (Option to display the total deposited balance)
