@@ -3,6 +3,7 @@ import requests
 import json
 import os
 import threading
+from tabulate import tabulate
 
 # Define the state variable
 state = {}
@@ -124,7 +125,10 @@ def remove_from_favorites(code):
         favorites_list = state["favorites"]  # Update favorites_list
         save_state(state)
         print_green(f"Successfully removed {code} from the favorites list.")
-        print_green(f"Current favorite list contains: {state['favorites']}")
+        if not favorites_set:
+            print_red(f"Your favorite list is empty.")
+        else:
+            print_green(f"Updated favorite list: {state['favorites']}")
     else:
         print_red(f"{code} is not in your favorites list.")
         return
@@ -240,8 +244,11 @@ def buy_cryptocurrency():
     display_coins_list()
 
     while True:
+        choice = int(input("Select a cryptocurrency to buy or press Enter to return to the main menu: "))
+        if choice == "":
+            break
         try:
-            choice = int(input("Select a cryptocurrency to buy (enter the corresponding number): "))
+            choice = int(choice)
             if 1 <= choice <= len(coins_list):
                 selected_coin = coins_list[choice - 1]
                 break
@@ -283,7 +290,7 @@ def buy_cryptocurrency():
                 print("Returning to the main menu...")
                 return
         except ValueError:
-            print_red("Invalid input. Please enter a valid number.")
+            print_red("Invalid input. Please enter a valid amount in USD.")
 
 # Option 7
 def display_profit_loss():
@@ -409,11 +416,11 @@ def sell_cryptocurrency():
             value_in_usd = assets[code] * coin_info['rate']
             print_green(f"{i}. {code} | Value in fiat: ${value_in_usd:.2f}")
 
-        print("Enter the corresponding number or 0 to return to the main menu: ")
+        print("Enter the corresponding number or press Enter to return to the main menu: ")
 
         try:
             choice = input()
-            if choice == "0":
+            if choice == "":
                 return  # Return to the main menu
             choice = int(choice)
 
@@ -460,7 +467,7 @@ def sell_cryptocurrency():
             else:
                 print_red("Invalid choice. Please select a valid number.")
         except ValueError:
-            print_red("Invalid input. Please enter a number or 0 to return to the main menu.")
+            print_red("Invalid input. Please enter a number or press the etner key to return to the main menu.")
 
 # Function to check the total assets
 def check_total_assets():
@@ -504,8 +511,8 @@ def check_total_assets():
 def display_transaction_history():
     bought_history = state.get("bought_history", [])
     sold_history = state.get("sold_history", [])
-    deposit_history = state.get("deposit_history", [])  # Added
-    withdraw_history = state.get("withdraw_history", [])  # Added
+    deposit_history = state.get("deposit_history", [])
+    withdraw_history = state.get("withdraw_history", [])
 
     if not bought_history and not sold_history and not deposit_history and not withdraw_history:
         print_red("\nPlease make a transaction first to view the transaction history.\n")
@@ -527,7 +534,7 @@ def display_transaction_history():
                 print_red(f"Sold: {quantity} {coin} | Price: ${price:.2f} USD | Timestamp: {timestamp}")
 
         # Display deposit histories
-        if deposit_history:  # Added
+        if deposit_history:
             print("Deposit Histories:")
             for history in deposit_history:
                 timestamp, amount = history
@@ -536,7 +543,7 @@ def display_transaction_history():
                 print("\033[0m", end="")  # Reset color
 
         # Display withdraw histories
-        if withdraw_history:  # Added
+        if withdraw_history:
             print("Withdraw Histories:")
             for history in withdraw_history:
                 timestamp, amount = history
@@ -560,6 +567,9 @@ def display_menu():
     print("11. Make a withdrawl")
     print("12. Reset data")
     print("13. Transaction History")
+
+def press_any_key_to_continue():
+    input("Press any key to continue...")
 
 # Main program
 if __name__ == "__main__":
@@ -589,23 +599,24 @@ if __name__ == "__main__":
 
     while True:
         display_menu()
-        choice = input("Select an option (1-14) or 0 to exit the program: ")
+        choice = input("Select an option (1-13) or press the etner key to exit the program: ")
 
         try:
             choice = int(choice)
 
             if choice == 1:
                 display_coins_list()
+                press_any_key_to_continue()
             elif choice == 2:
                 while True:
                     print("Option 2 selected.")
                     print("Select a cryptocurrency to add to your favorites:")
                     for i, coin in enumerate(populated_list, 1):
                         print(f"{i}. {coin}")
-                    print("Enter the corresponding number, or '0' to return to the main menu.")
+                    print("Enter the corresponding number, or press the Etner key to return to the main menu.")
 
                     coin_choice = input("Your choice: ")
-                    if coin_choice == "q":
+                    if coin_choice == "":
                         break  # Return to the main menu
                     try:
                         coin_choice = int(coin_choice)
@@ -613,35 +624,38 @@ if __name__ == "__main__":
                             coin_name = populated_list[coin_choice - 1]
                             add_to_favorites(coin_name)
                             print_green(f"Updated favorites list result is: {state['favorites']}")
-                            break  # Successfully added, return to the main menu
                         else:
-                            print_red("Invalid number. Please enter a valid number or '0' to return to the main menu.")
+                            print_red("Invalid number. Please enter a valid number or press the Etner key to return to the main menu.")
                     except ValueError:
-                        print_red("Invalid input. Please enter a valid number or '0' to return to the main menu.")
+                        print_red("Invalid input. Please enter a valid number or press the Etner key to return to the main menu.")
             elif choice == 3:
                 if not state["favorites"]:
-                    print_red("Your favorites list is currently empty.")
+                    print_red("\nYour favorites list is currently empty.\n")
                 else:
                     while True:
                         print("Option 3 selected.")
                         print("Select a cryptocurrency to remove from your favorites:")
                         for i, coin in enumerate(state["favorites"], 1):
                             print_green(f"{i}. {coin}")
-                        print("Enter the corresponding number, or '0' to return to the main menu.")
+                        print("Enter the corresponding number, or press enter to return to the main menu.")
 
                         coin_choice = input("Your choice: ")
-                        if coin_choice == "q":
+                        if coin_choice == '':
                             break  # Return to the main menu
                         try:
                             coin_choice = int(coin_choice)
                             if 1 <= coin_choice <= len(state["favorites"]):
                                 coin_name = state["favorites"][coin_choice - 1]
                                 remove_from_favorites(coin_name)
-                                break  # Successfully removed, return to the main menu
+                                if not state["favorites"]:
+                                    break
+                                else:
+                                    press_any_key_to_continue()
                             else:
-                                print_red("Invalid number. Please enter a valid number or '0' to return to the main menu.")
+                                print_red("Invalid number. Please enter a valid number or press the Etner key to return to the main menu.")
                         except ValueError:
-                            print_red("Invalid input. Please enter a valid number or '0' to return to the main menu.")
+                            print_red("Invalid input. Please enter a valid number or press the Etner key to return to the main menu.")
+
             elif choice == 4:
                 if not favorites_list:
                     print_red("Sorry, your favorites list is empty.")
@@ -651,47 +665,60 @@ if __name__ == "__main__":
                         coin_info = [coin for coin in coins_list if coin['code'] == coin_code][0]
                         rate = coin_info['rate']
                         print_green(f"{coin_code}: ${rate:.2f} USD")
+                    press_any_key_to_continue()
             elif choice == 5:
                 print("Option 5 selected.")
                 # (Option to display the total deposited balance)
                 display_deposited_balance(total_balance)
+                press_any_key_to_continue()
             elif choice == 6:
                 check_total_assets()
+                press_any_key_to_continue()
             elif choice == 7:
                 display_profit_loss()
+                press_any_key_to_continue()
             elif choice == 8:
                 buy_cryptocurrency()
+                press_any_key_to_continue()
             elif choice == 9:
                 sell_cryptocurrency()
             elif choice == 10:
                 # Make a deposit
                 print_green(f"Current balance is ${total_balance:.2f}")
-                deposit_amount = float(input("Enter the deposit amount: $"))
+                deposit_amount = float(input("Enter the deposit amount or press the Enter key to cancel: $"))
                 if deposit_amount <= 0:
                     print_red("Invalid deposit amount.")
+                    press_any_key_to_continue()
+
                 else:
                     total_balance = make_deposit(total_balance, deposit_amount)
                     print_green(f"Successfully deposited ${deposit_amount:.2f}.")
                     print_green(f"The total balance is now: ${total_balance:.2f}.")
+                    press_any_key_to_continue()
+
             elif choice == 11:
                 print("Option 11 selected.") # Make a withdrawal
                 print_green(f"Current amount is ${total_balance:.2f}")
-                withdrawal_amount = float(input("Enter the withdrawal amount: $"))
+                withdrawal_amount = float(input("Enter the withdrawal amount or press the Enter key to cancel: $"))
                 if withdrawal_amount <= 0 or withdrawal_amount > total_balance:
                     print_red("Insufficient fund.")
+                    press_any_key_to_continue()
                 else:
                     total_balance = make_withdrawal(total_balance, withdrawal_amount)
                     print_green(f"Successfully withdrew ${withdrawal_amount:.2f}.")
                     print_green(f"The total balance is now: ${total_balance:.2f}.")
+                    press_any_key_to_continue()
             elif choice == 12:
                 reset_state()
+                press_any_key_to_continue()
             elif choice == 13:
                 display_transaction_history()
+                press_any_key_to_continue()
             elif choice == 0:
                 print_green(f"\nYou selected Option {choice}. The program will now exit. Thank you.\n")
                 break
             else:
-                print_red("Invalid choice. Please select a number between 1 and 12 or 0 to exit the program.")
+                print_red("Invalid choice. Please select a number between 1 and 13 or press the Enter key to exit the program.")
         except ValueError:
-            print_red("Invalid input. Please enter a number.")
+            print_red("Enter pressed, returning to the main menu.")
 
