@@ -20,6 +20,10 @@ def print_red(text):
 def print_blue(text):
     print(f"\033[94m{text}\033[0m")
 
+# Function to print text in orange
+def print_orange(text):
+    print(f"\033[93m{text}\033[0m")
+
 # Function to load the entire state from a file
 def load_state():
     if os.path.isfile("state.json"):
@@ -122,10 +126,8 @@ def pre_populate_list():
 
 # Option 1 - Function to display the coins list from the state
 def display_coins_list():
-    print("Option 1 selected. - Display top 10 cryptocurrency list.")
     coins_list = state.get("coins_list", [])
     if coins_list:
-        print("Available coins for purchase:")
         for i, coin in enumerate(coins_list[:10], 1):
             code = coin['code']
             rate = "{:,.2f}".format(coin['rate'])
@@ -136,7 +138,8 @@ def display_coins_list():
 
 # Option 2 - Add coins to the favorites list
 def add_to_favorites():
-    print("Option 2 selected - Add a cryptocurrency to my favorites.")
+    print_orange("\nOption 2 selected - Add a cryptocurrency to my favorites.")
+    print_green(f"\nYour current favorite list contains: {state['favorites']}\n")
     while True:
         print("Select a cryptocurrency to add to your favorites:")
         for i, coin in enumerate(populated_list, 1):
@@ -164,7 +167,7 @@ def add_to_favorites():
 
 # Option 3 - Remove selected cryptocurrency from favorites list
 def remove_crypto_from_favorites():
-    print("Option 3 selected - Remove coin from my favorites.")
+    print_orange("\nOption 3 selected - Remove coin from my favorites.")
     if not state["favorites"]:
         print_red("\nYour favorites list is currently empty.\n")
     else:
@@ -212,20 +215,22 @@ def remove_from_favorites(code):
 
 # Option 4 - Display my favorites
 def display_favorite_list():
-    print("Option 4 selected - Display favorites.")
+    print_orange("\nOption 4 selected - Display favorites.")
+
     if not favorites_list:
-                    print_red("\nYour favorites list is empty.\n")
+        print_red("\nYour favorites list is empty.\n")
     else:
         print_green("Favorites list:")
-        for coin_code in favorites_list:
+        for i, coin_code in enumerate(favorites_list, 1):
             coin_info = [coin for coin in coins_list if coin['code'] == coin_code][0]
             rate = coin_info['rate']
-            print_green(f"{coin_code}: ${rate:.2f} USD")
+            print_green(f"{i}. {coin_code} ${rate:.2f} USD")
+
         press_any_key_to_continue()
 
 # Option 5 - Function to display the current deposited balance
 def display_deposited_balance(balance):
-    print("Option 5 selected - My total amount of USD")
+    print_orange("\nOption 5 selected - My total amount of USD")
     if balance == 0:
         print_red(f"\nTotal balance is: ${balance:.2f} USD\n")
         press_any_key_to_continue()
@@ -278,7 +283,7 @@ def check_total_assets():
 def display_profit_loss():
     global total_balance
 
-    print("Option 7 selected - Display Profit / Loss")
+    print_orange("\nOption 7 selected - Display Profit / Loss")
 
     total_assets = state.get("total_assets", {})
     bought_history = state.get("bought_history", [])
@@ -286,6 +291,7 @@ def display_profit_loss():
 
     if not total_assets:
         print_red("You currently own no cryptocurrencies.")
+        press_any_key_to_continue()  # Added to handle Enter key press
         return
 
     for code, quantity in total_assets.items():
@@ -293,16 +299,22 @@ def display_profit_loss():
         current_value = quantity * coin_info['rate']
 
         # Calculate the initial purchase price and total purchase cost
-        purchase_price = 0
         total_purchase_cost = 0
+        total_quantity_purchased = 0
+
         for history in bought_history:
-            coin, hist_quantity, price = history
+            timestamp, coin, hist_quantity, price = history
             if coin == code:
-                purchase_price = price / hist_quantity  # Price per unit at the time of purchase
                 total_purchase_cost += price
+                total_quantity_purchased += hist_quantity
+
+        if total_quantity_purchased == 0:
+            purchase_price = 0  # Avoid division by zero
+        else:
+            purchase_price = total_purchase_cost / total_quantity_purchased
 
         # Calculate the current value and profit/loss
-        profit_loss = current_value - total_purchase_cost
+        profit_loss = current_value - (purchase_price * quantity)
 
         # Determine whether it's a profit or loss
         if profit_loss >= 0:
@@ -314,20 +326,22 @@ def display_profit_loss():
         formatted_profit_loss = "{:.2f}".format(profit_loss)
 
         print(f"{code}: {formatted_quantity} {code} | Current Value: ${current_value:.2f} USD | "
-              f"Purchase Price: ${purchase_price:.2f} USD | "
+              f"Average Purchase Price: ${purchase_price:.2f} USD | "
               f"Profit/Loss: {color}${formatted_profit_loss} USD\033[0m")
-        press_any_key_to_continue()
+
+    press_any_key_to_continue()
 
 # Option 8 - Function to buy cryptocurrency
 def buy_cryptocurrency():
     global total_balance
+    total_balance = state.get("total_balance", 0)
 
     if "total_assets" not in state:
         state["total_assets"] = {}
 
-    print("Option 8 selected - Buy cryptocurrency")
+    print_orange("\nOption 8 selected - Buy cryptocurrency\n")
     display_coins_list()
-
+    total_amount_in_usd = 0
     while True:
         choice = int(input("Select a cryptocurrency to buy or press Enter to return to the main menu: "))
         if choice == "":
@@ -368,7 +382,17 @@ def buy_cryptocurrency():
 
                 print_green(f"Successfully bought ${amount_to_buy:.2f} worth of {coin_name}.")
                 print_green(f"The new total amount of owned {coin_name} is: {state['total_assets'][coin_name]:.6f}")
-                print_green(f"Your new total balance in fiat is: ${total_balance}")
+                print_green(f"Your new total balance in fiat is: ${total_balance:.2f}")
+
+                # Calculate and update the grand total
+                grand_total = total_balance
+                for code, quantity in state["total_assets"].items():
+                    coin_info = [coin for coin in coins_list if coin['code'] == code][0]
+                    grand_total += quantity * coin_info['rate']
+
+                state["grand_total"] = grand_total
+                print_green(f"Grand Total in fiat (cryptocurrency + fiat): ${grand_total:.2f}")
+
                 return total_balance
             else:
                 print_red("Insufficient balance. Please deposit more and try again. Loading main menu...")
@@ -380,7 +404,7 @@ def buy_cryptocurrency():
 # Option 9 - Sell cryptocurrency
 def sell_cryptocurrency():
     global total_balance
-    print("Option 9 selected - Sell cryptocurrency")
+    print_orange("\nOption 9 selected - Sell cryptocurrency")
 
     while True:
         # Display the list of assets the user owns
@@ -438,7 +462,7 @@ def sell_cryptocurrency():
                             state["sold_history"].append((timestamp, selected_code, amount_to_sell / coin_info['rate'], amount_to_sell))
                             save_state(state)
 
-                            print_green(f"\nSuccessfully sold ${amount_to_sell:.2f} worth of {selected_code}.")
+                            print_green(f"\nSuccessfully sold ${amount_to_sell:.2f} worth of {selected_code}.\n")
                             press_any_key_to_continue()
                             check_total_assets()
                             press_any_key_to_continue()
@@ -471,7 +495,7 @@ def make_a_deposit():
 
 # Option 10.5 - Function to make a deposit
 def make_deposit(balance, amount):
-    print("Option 10 selected - Make a deposit")
+    print_orange("\nOption 10 selected - Make a deposit")
     balance += amount
     state["total_balance"] = balance
 
@@ -487,7 +511,7 @@ def make_deposit(balance, amount):
 # Option 11 - withdrawal
 def make_a_withdraw():
     global total_balance
-    print("Option 11 selected.") # Make a withdrawal
+    print_orange("\nOption 11 selected.") # Make a withdrawal
     print_green(f"Current amount is ${total_balance:.2f}")
     withdrawal_amount = float(input("Enter the withdrawal amount or press the Enter key to cancel: $"))
     if withdrawal_amount <= 0 or withdrawal_amount > total_balance:
@@ -501,7 +525,7 @@ def make_a_withdraw():
 
 # Option 11.5 - Function to make a withdrawal
 def make_withdrawal(balance, amount):
-    print("Option 11 selected - Make a withdraw")
+    print_orange("\nOption 11 selected - Make a withdraw")
     balance -= amount
     state["total_balance"] = balance
 
@@ -581,7 +605,7 @@ def display_transaction_history():
 
 # Function to display the menu
 def display_menu():
-    print("What would you like to do?")
+    print_orange("\nWhat would you like to do?")
     print("1. Show all available cryptocurrency coins.")
     print("2. Add a cryptocurrency to my favorites.")
     print("3. Remove cryptocurrency from my favorites.")
@@ -594,7 +618,7 @@ def display_menu():
     print("10. Make a deposit.")
     print("11. Make a withdrawal.")
     print("12. Reset all data.")
-    print("13. Transaction History.")
+    print("13. Transaction History.\n")
 
 def press_any_key_to_continue():
     input("Press any key to continue...")
@@ -619,7 +643,7 @@ if __name__ == "__main__":
 
     online_status = display_status(status)
 
-    print(f"The API status is {online_status} and you have {credit} credit(s) remaining.")
+    print(f"\nThe API status is {online_status} and you have {credit} credit(s) remaining.\n")
 
     # Start the background thread to update the coins list
     coins_thread = threading.Thread(target=update_coins_list)
@@ -628,7 +652,7 @@ if __name__ == "__main__":
 
     while True:
         display_menu()
-        choice = input("Select an option (1-13) or press the Enter key to exit the program: ")
+        choice = input("Select an option (1-13) or press the Ctrl+C to exit the program: ")
 
         try:
             choice = int(choice)
@@ -667,7 +691,7 @@ if __name__ == "__main__":
                 print_green(f"\nYou selected Option {choice}. The program will now exit. Thank you.\n")
                 break
             else:
-                print_red("Invalid choice. Please select a number between 1 and 13 or press the Enter key to exit the program.")
+                print_red("Invalid choice. Please select a number between 1 and 13 or press ctrl+C to exit the program.")
         except ValueError:
             print_red("Enter pressed, returning to the main menu.")
 
