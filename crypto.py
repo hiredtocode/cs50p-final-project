@@ -413,7 +413,6 @@ def sell_cryptocurrency():
                 current_value = assets[selected_code] * coin_info['rate']
 
                 print_green(f"You currently own {assets[selected_code]:.6f} {selected_code} valued at ${current_value:.2f} USD")
-
                 while True:
                     try:
                         amount_to_sell = float(input(f"Enter the amount of {selected_code} to sell (USD): $"))
@@ -438,7 +437,9 @@ def sell_cryptocurrency():
                             save_state(state)
 
                             print_green(f"\nSuccessfully sold ${amount_to_sell:.2f} worth of {selected_code}.")
+                            press_any_key_to_continue()
                             check_total_assets()
+                            press_any_key_to_continue()
                             return  # Return to the main menu
 
                         else:
