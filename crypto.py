@@ -231,9 +231,11 @@ def display_favorite_list():
 def display_deposited_balance(balance):
     print("Option 5 selected - My total amount of USD")
     if balance == 0:
-        print_red(f"\nTotal balance: ${balance:.2f}\n")
+        print_red(f"\nTotal balance is: ${balance:.2f} USD\n")
+        press_any_key_to_continue()
     else:
-        print_green(f"\nTotal balance: ${balance:.2f}\n")
+        print_green(f"\nTotal balance is: ${balance:.2f} USD\n")
+        press_any_key_to_continue()
 
 # Option 6 - Function to check the total assets
 def check_total_assets():
@@ -245,6 +247,7 @@ def check_total_assets():
     if not total_assets and total_balance == 0:
         print_red("You currently own no cryptocurrencies.")
         print_red("You currently own no USD.")
+        press_any_key_to_continue()
     elif not total_assets:
         total_value_in_usd = 0
         for code, quantity in total_assets.items():
@@ -258,6 +261,7 @@ def check_total_assets():
         grand_total += total_value_in_usd  # Add the total value of assets to the grand total
         state["grand_total"] = grand_total  # Update the state with the grand total
         print_green(f"Grand Total in fiat: ${grand_total:.2f}")
+        press_any_key_to_continue()
     else:
         print_green("\nYour assets:")
         total_amount_in_usd = 0
@@ -272,6 +276,7 @@ def check_total_assets():
         grand_total += total_amount_in_usd  # Add the total value of assets to the grand total
         state["grand_total"] = grand_total  # Update the state with the grand total
         print_green(f"Grand Total in fiat (cryptocurrency + fiat): ${grand_total:.2f}")
+        press_any_key_to_continue()
 
 # Option 7 - Display profits and losses
 def display_profit_loss():
@@ -295,7 +300,7 @@ def display_profit_loss():
         purchase_price = 0
         total_purchase_cost = 0
         for history in bought_history:
-            timestamp, coin, hist_quantity, price = history
+            coin, hist_quantity, price = history
             if coin == code:
                 purchase_price = price / hist_quantity  # Price per unit at the time of purchase
                 total_purchase_cost += price
@@ -315,6 +320,7 @@ def display_profit_loss():
         print(f"{code}: {formatted_quantity} {code} | Current Value: ${current_value:.2f} USD | "
               f"Purchase Price: ${purchase_price:.2f} USD | "
               f"Profit/Loss: {color}${formatted_profit_loss} USD\033[0m")
+        press_any_key_to_continue()
 
 # Option 8 - Function to buy cryptocurrency
 def buy_cryptocurrency():
@@ -366,7 +372,7 @@ def buy_cryptocurrency():
 
                 print_green(f"Successfully bought ${amount_to_buy:.2f} worth of {coin_name}.")
                 print_green(f"The new total amount of owned {coin_name} is: {state['total_assets'][coin_name]:.6f}")
-                print_green(f"Your new total balance in fiat is {total_balance}")
+                print_green(f"Your new total balance in fiat is: ${total_balance}")
                 return total_balance
             else:
                 print_red("Insufficient balance. Please deposit more and try again. Loading main menu...")
@@ -641,13 +647,10 @@ if __name__ == "__main__":
                 display_favorite_list()
             elif choice == 5:
                 display_deposited_balance(total_balance)
-                press_any_key_to_continue()
             elif choice == 6:
                 check_total_assets()
-                press_any_key_to_continue()
             elif choice == 7:
                 display_profit_loss()
-                press_any_key_to_continue()
             elif choice == 8:
                 buy_cryptocurrency()
                 press_any_key_to_continue()
