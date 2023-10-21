@@ -49,9 +49,9 @@ def check_service_status():
 # Function to display "Online" in green or "Offline" in red
 def display_status(status):
     if status == "{}":
-        print("API status is \033[92mOnline\033[0m")
+        return "\033[92mOnline\033[0m"
     else:
-        print(f"API status is \033[91mOffline\033[0m {status}")
+        return "\033[91mOffline\033[0m {status}"
 
 # Function to check credits
 def check_service_credits():
@@ -65,10 +65,6 @@ def check_service_credits():
     response = requests.request("POST", url, headers=headers, data=payload)
     response_data = json.loads(response.text)
     return response_data.get("dailyCreditsRemaining")
-
-# Function to display remaining credits for API requests
-def display_credit(credit):
-    print(f"{credit} credits remaining.")
 
 # Function to save the entire state to a file
 def save_state(state):
@@ -585,20 +581,20 @@ def display_transaction_history():
 
 # Function to display the menu
 def display_menu():
-    print("Please input your selection number:")
-    print("1. Show all available cryptocurrency coins")
-    print("2. Add a cryptocurrency to my favorites")
-    print("3. Remove cryptocurrency from my favorites")
-    print("4. Display my favorites")
-    print("5. My total amount of USD")
-    print("6. Total assets")
-    print("7. Current status of my Profit / Loss")
-    print("8. Buy cryptocurrency")
-    print("9. Sell cryptocurrency")
-    print("10. Make a deposit")
-    print("11. Make a withdrawl")
-    print("12. Reset data")
-    print("13. Transaction History")
+    print("What would you like to do?")
+    print("1. Show all available cryptocurrency coins.")
+    print("2. Add a cryptocurrency to my favorites.")
+    print("3. Remove cryptocurrency from my favorites.")
+    print("4. Display my favorites list.")
+    print("5. Total fiat balance.")
+    print("6. Total assets.")
+    print("7. Profit / Loss status.")
+    print("8. Buy cryptocurrency.")
+    print("9. Sell cryptocurrency.")
+    print("10. Make a deposit.")
+    print("11. Make a withdrawal.")
+    print("12. Reset all data.")
+    print("13. Transaction History.")
 
 def press_any_key_to_continue():
     input("Press any key to continue...")
@@ -621,8 +617,9 @@ if __name__ == "__main__":
     if not populated_list:
         pre_populate_list()
 
-    display_credit(credit)
-    display_status(status)
+    online_status = display_status(status)
+
+    print(f"The API status is {online_status} and you have {credit} credit(s) remaining.")
 
     # Start the background thread to update the coins list
     coins_thread = threading.Thread(target=update_coins_list)
