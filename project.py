@@ -34,49 +34,12 @@ class ProgramState:
         self.sold_history = []
         self.grand_total = 0
 
-    def to_dict(self):
-        return {
-            "favorites": self.favorites,
-            "total_balance": self.total_balance,
-            "total_assets": self.total_assets,
-            "coins_list": self.coins_list,
-            "populated_list": self.populated_list,
-            "deposit_history": self.deposit_history,
-            "withdraw_history": self.withdraw_history,
-            "bought_history": self.bought_history,
-            "sold_history": self.sold_history,
-            "grand_total": self.grand_total
-        }
-
     @classmethod
-    def reset_state(self):
-        loaded_state = self.load_state()
-        self.favorites = loaded_state["favorites"]
-        self.total_balance = loaded_state["total_balance"]
-        self.total_assets = loaded_state["total_assets"]
-        self.coins_list.clear()
-        self.coins_list.extend(UtilityFunctions.check_coins_list())
-        self.populated_list = []
-        self.deposit_history = loaded_state["deposit_history"]
-        self.withdraw_history = loaded_state["withdraw_history"]
-        self.bought_history = loaded_state["bought_history"]
-        self.sold_history = loaded_state["sold_history"]
-        self.grand_total = loaded_state["grand_total"]
-        self.pre_populate_list()
-
-    def reset(self):
-        self.favorites = []
-        self.total_balance = 0
-        self.total_assets = {}
-        self.coins_list = []
-        self.populated_list = []
-        self.deposit_history = []
-        self.withdraw_history = []
-        self.bought_history = []
-        self.sold_history = []
-        self.grand_total = 0
-        self.pre_populate_list()
-
+    def reset_state(cls):
+        loaded_state = cls.load_state()
+        cls.coins_list.clear()
+        cls.coins_list.extend(UtilityFunctions.check_coins_list())
+        cls.pre_populate_list()
 
     def save_state(self):
          # Create a dictionary containing the state data you want to save
@@ -97,8 +60,6 @@ class ProgramState:
         with open("state.json", "w") as file:
             json.dump(state_data, file)
 
-        print_color("State saved successfully.", COLOR_GREEN)
-
     def load_state(self):
         if os.path.isfile("state.json"):
             with open("state.json", "r") as file:
@@ -107,19 +68,34 @@ class ProgramState:
             state_dict = {
                 "favorites": [],
                 "total_balance": 0,
+                "total_assets": {},
                 "coins_list": [],
+                "populated_list": [],
+                "deposit_history": [],
+                "withdraw_history": [],
                 "bought_history": [],
                 "sold_history": [],
-                "total_assets": {},
                 "grand_total": 0,
             }
-        return state_dict
+
+        # Assign the loaded state values to the class attributes
+        self.favorites = state_dict["favorites"]
+        self.total_balance = state_dict["total_balance"]
+        self.total_assets = state_dict["total_assets"]
+        self.coins_list = state_dict["coins_list"]
+        self.populated_list = state_dict["populated_list"]
+        self.deposit_history = state_dict["deposit_history"]
+        self.withdraw_history = state_dict["withdraw_history"]
+        self.bought_history = state_dict["bought_history"]
+        self.sold_history = state_dict["sold_history"]
+        self.grand_total = state_dict["grand_total"]
+
 
     def get_coin_list(self):
         self.coins_list = UtilityFunctions.check_coins_list()
 
     def pre_populate_list(self):
-        print_color("\nPre-populating the coins list...")
+        print_color("Pre-populating the coins list...")
 
         # Debug: Print the initial coins_list
         # print("Initial coins_list:", self.coins_list)
@@ -129,7 +105,7 @@ class ProgramState:
             self.populated_list.append(code)
 
         self.save_state()  # Save the state within the class
-        print_color("Successfully pre-populated coins list.\n")
+        print_color("\nSuccessfully pre-populated coins list.")
 
 # Function to print_color text in color
 def print_color(text, color = COLOR_GREEN):
@@ -182,7 +158,7 @@ class UtilityFunctions:
     # Function to auto-update the coins list in the background every 60 seconds
     @staticmethod
     def update_coins_list(coins_list):
-        global stop_background_thread  # Declare the global variable
+        stop_background_thread = UtilityFunctions.stop_background_thread
 
         while not stop_background_thread:
             try:
@@ -195,8 +171,8 @@ class UtilityFunctions:
 
                 # Sleep for a while before updating again
                 time.sleep(60)  # Adjust the sleep duration as needed
-            except KeyboardInterrupt:
-                # Handle Ctrl+C gracefully
+
+            except KeyboardInterrupt: # Handle Ctrl+C gracefully
                 stop_background_thread = True
                 break
 # Option 1 - Function to display the coins list from the state
@@ -274,15 +250,12 @@ def remove_crypto_from_favorites():
             except ValueError:
                 print_color("Invalid input. Please enter a valid number or press the Enter key to return to the main menu.", COLOR_RED)
 
-
 # Option 3.5 - Function to remove a cryptocurrency from favorites
 def remove_from_favorites(code):
-    global favorites
     favorites_set = set(state.favorites)
     if code in favorites_set:
         favorites_set.remove(code)
         state.favorites = list(favorites_set)  # Convert back to a list
-        favorites = state.favorites  # Update favorites
         state.save_state()
         print_color(f"\nSuccessfully removed {code} from the favorites list.\n", COLOR_RED)
         if not favorites_set:
@@ -297,16 +270,21 @@ def remove_from_favorites(code):
 def display_favorite_list():
     print_color("\nOption 4 selected - Display favorites.")
 
+    # Access the favorites list from the state
+    favorites = state.favorites
+
     if not favorites:
         print_color("\nYour favorites list is empty.\n", COLOR_RED)
     else:
         print_color("Favorites list:")
         for i, coin_code in enumerate(favorites, 1):
-            coin_info = [coin for coin in coins_list if coin['code'] == coin_code][0]
+            # Access coin info from the coins_list in the state
+            coin_info = [coin for coin in state.coins_list if coin['code'] == coin_code][0]
             rate = coin_info['rate']
             print_color(f"{i}. {coin_code} ${rate:.2f} USD")
 
         press_any_key_to_continue()
+
 
 # Option 5 - Function to display the current deposited balance
 def display_deposited_balance(balance):
@@ -363,56 +341,43 @@ def check_total_assets():
         state.grand_total = grand_total  # Update the state with the grand total
         print_color(f"Grand Total in fiat (cryptocurrency + fiat): ${grand_total:.2f}")
 
-# Option 7 - Display profits and losses
+# Option 7 - Display Profit / Loss status
 def display_profit_loss():
-    global total_balance, total_assets
+    print_color("\nOption 7 selected - Display Profit / Loss status")
 
-    print_color("\nOption 7 selected - Display Profit / Loss")
-
-    bought_history = state.bought_history
-    coins_list = state.coins_list
+    total_assets = state.total_assets
+    total_balance = state.total_balance
+    grand_total = total_balance
 
     if not total_assets:
         print_color("You currently own no cryptocurrencies.", COLOR_RED)
-        press_any_key_to_continue()  # Added to handle Enter key press
         return
 
     for code, quantity in total_assets.items():
         coin_info = [coin for coin in coins_list if coin['code'] == code][0]
-        current_value = quantity * coin_info['rate']
 
-        # Calculate the initial purchase price and total purchase cost
-        total_purchase_cost = 0
-        total_quantity_purchased = 0
+        current_value = 0  # Initialize current_value to 0
 
-        for history in bought_history:
-            timestamp, coin, hist_quantity, price = history
-            if coin == code:
-                total_purchase_cost += price
-                total_quantity_purchased += hist_quantity
+        if 'initial_rate' in coin_info:
+            initial_value = quantity * coin_info['initial_rate']
+            current_value = quantity * coin_info['rate']
+            profit_loss = current_value - initial_value
 
-        if total_quantity_purchased == 0:
-            purchase_price = 0  # Avoid division by zero
+            print_color(f"{code}:")
+            print_color(f"  Quantity: {quantity:.6f} {code}")
+            print_color(f"  Current Value: ${current_value:.2f} USD")
+            print_color(f"  Initial Value: ${initial_value:.2f} USD")
+            print_color(f"  Profit / Loss: ${profit_loss:.2f} USD")
         else:
-            purchase_price = total_purchase_cost / total_quantity_purchased
+            print_color(f"{code}:")
+            print_color(f"  Quantity: {quantity:.6f} {code}")
+            print_color(f"  Current Rate: ${coin_info['rate']:.2f} USD")
+            print_color("  Initial Rate data not available.")
 
-        # Calculate the current value and profit/loss
-        profit_loss = current_value - (purchase_price * quantity)
+        grand_total += current_value  # Only update when 'initial_rate' data is available
 
-        # Determine whether it's a profit or loss
-        if profit_loss >= 0:
-            color = "\033[92m"  # Green for profit
-        else:
-            color = "\033[91m"  # Red for loss
+    print_color(f"\nGrand Total in fiat (cryptocurrency + fiat): ${grand_total:.2f}")
 
-        formatted_quantity = "{:.6f}".format(quantity)
-        formatted_profit_loss = "{:.2f}".format(profit_loss)
-
-        print(f"{code}: {formatted_quantity} {code} | Current Value: ${current_value:.2f} USD | "
-              f"Average Purchase Price: ${purchase_price:.2f} USD")
-        print(f"Profit/Loss: {color}${formatted_profit_loss} USD\033[0m")
-
-    press_any_key_to_continue()
 
 # Option 8 - Function to buy cryptocurrency
 def buy_cryptocurrency():
@@ -420,7 +385,6 @@ def buy_cryptocurrency():
 
     print_color("\nOption 8 selected - Buy cryptocurrency\n")
     display_coins_list()
-    total_amount_in_usd = 0
     while True:
         choice = int(input("Select a cryptocurrency to buy or press Enter to return to the main menu: "))
         if choice == "":
@@ -482,7 +446,7 @@ def buy_cryptocurrency():
 
 # Option 9 - Sell cryptocurrency
 def sell_cryptocurrency():
-    global total_balance
+    total_balance = state.total_balance
     print_color("\nOption 9 selected - Sell cryptocurrency")
 
     while True:
@@ -559,7 +523,7 @@ def sell_cryptocurrency():
 # Option 10 - Make a deposit
 def make_a_deposit():
     # Make a deposit
-    global total_balance
+    total_balance = state.total_balance
     print_color(f"Current balance is ${total_balance:.2f}")
     deposit_amount = float(input("Enter the deposit amount or press the Enter key to cancel: $"))
     if deposit_amount <= 0:
@@ -574,7 +538,7 @@ def make_a_deposit():
 
 # Option 10.5 - Function to make a deposit
 def make_deposit(balance, amount):
-    global deposit_history
+    deposit_history = state.deposit_history
     balance += amount
     state.total_balance = balance
 
@@ -588,7 +552,7 @@ def make_deposit(balance, amount):
 
 # Option 11 - withdrawal
 def make_a_withdraw():
-    global total_balance
+    total_balance = state.total_balance
     print_color("\nOption 11 selected.") # Make a withdrawal
     print_color(f"Current amount is ${total_balance:.2f}")
     withdrawal_amount = float(input("Enter the withdrawal amount or press the Enter key to cancel: $"))
@@ -673,7 +637,7 @@ def display_menu(state):
         ("Remove cryptocurrency from my favorites.", bool(state.favorites)),
         ("Display my favorites list.", bool(state.favorites)),
         ("Total fiat balance.", bool(state.total_balance)),
-        ("Total assets.", bool(state.total_assets and state.total_balance > 0)),
+        ("Total assets.", bool(state.total_assets or state.total_balance > 0)),
         ("Profit / Loss status.", bool(state.total_assets)),
         ("Buy cryptocurrency.", bool(state.total_balance)),
         ("Sell cryptocurrency.", bool(state.total_assets)),
@@ -692,34 +656,18 @@ def display_menu(state):
     print()  # Add an extra line for better formatting
 
 def press_any_key_to_continue():
-    input(f"{COLOR_YELLOW}Press any key to continue...{COLOR_RESET}")
+    # input(f"{COLOR_YELLOW}Press any key to continue...{COLOR_RESET}")
+    ...
 
-# Main program
-if __name__ == "__main__":
-    state = ProgramState()
-    coins_list_lock = threading.Lock()
-    stop_background_thread = False
-
-    favorites = state.favorites
-    populated_list = state.populated_list
-    total_balance = state.total_balance
-    total_assets = state.total_assets
-    bought_history = state.bought_history
-    sold_history = state.sold_history
-    deposit_history = state.deposit_history
-    withdraw_history = state.withdraw_history
-
-    # Make the initial API request to get the coins list
-    coins_list = UtilityFunctions.check_coins_list()
-    state.coins_list = coins_list
-    state.save_state()
-    def main_menu_loop():
+def main_menu_loop():
+        global state
         while True:
             display_menu(state)
-            choice = input(f"{COLOR_YELLOW}Select an option (1-13) or press the Ctrl+C to exit the program: {COLOR_RESET}")
+            choice = input(f"{COLOR_YELLOW}Select an option (1-13) or press the Ctrl+C to exit the program: {COLOR_RESET}").strip()
 
             try:
                 choice = int(choice)
+                print("Choice after conversion:", choice)
 
                 if choice == 1:
                     display_coins_list()
@@ -731,7 +679,7 @@ if __name__ == "__main__":
                 elif choice == 4:
                     display_favorite_list()
                 elif choice == 5:
-                    display_deposited_balance(total_balance)
+                    display_deposited_balance(state.total_balance)
                 elif choice == 6:
                     check_total_assets()
                     press_any_key_to_continue()
@@ -754,28 +702,41 @@ if __name__ == "__main__":
                     press_any_key_to_continue()
                 elif choice == 0:
                     print_color(f"\nYou selected Option {choice}. The program will now exit. Thank you.\n", COLOR_YELLOW)
-                    stop_background_thread = True  # Set the flag to stop the background thread
                     break
                 else:
                     print_color("Invalid choice. Please select a number between 1 and 13 or press ctrl+C to exit the program.", COLOR_RED)
             except ValueError:
-                print_color("Enter pressed, returning to the main menu.", COLOR_YELLOW)
+                print_color("Invalid input. Please enter a valid number between 1 and 13.", COLOR_RED)
+
+# Main program
+if __name__ == "__main__":
+    state = ProgramState()
+    state.load_state()
+    populated_list = state.populated_list
 
     status = UtilityFunctions.check_service_status()
     credit = UtilityFunctions.check_service_credits()
-
-    if not populated_list:
-        state.pre_populate_list()
 
     online_status = UtilityFunctions.display_status(status)
 
     print(f"\nThe API status is {online_status} and you have {credit} credit(s) remaining.\n")
 
+    # Make the initial API request to get the coins list
+    coins_list = UtilityFunctions.check_coins_list()
+    state.coins_list = coins_list
+    state.save_state()
+
+    if not populated_list:
+        state.pre_populate_list()
+
+    main_menu_loop()
+
     # Start the background thread to update the coins list
-    coins_thread = threading.Thread(target=UtilityFunctions.update_coins_list(coins_list))
+    coins_thread = threading.Thread(target=UtilityFunctions.update_coins_list, args=(coins_list,))
     coins_thread.daemon = True  # This allows the thread to exit when the main program exits
     coins_thread.start()
 
-    main_menu_loop()
+    coins_list_lock = threading.Lock()
+    stop_background_thread = False
 
 
