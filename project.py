@@ -344,37 +344,24 @@ def check_total_assets():
 
     grand_total = total_balance  # Initialize grand total with the total balance
 
-    if not total_assets and total_balance == 0:
+    if not total_assets and total_balance == 0:  # No assets or balance
         print_color("You currently own no cryptocurrencies.", COLOR_RED)
         print_color("You currently own no USD.", COLOR_RED)
         press_any_key_to_continue()
     elif not total_assets:
-        total_value_in_usd = 0
+        print_color(f"Total Balance in fiat: ${total_balance:.2f}", COLOR_GREEN)
+    elif not total_balance:
+        # display total asset name, value of 6 digits and the value of the asset in fiat
+        print_color("\nYour assets:")
+        total_amount_in_usd = 0
         for code, quantity in total_assets.items():
             coin_info = [coin for coin in coins_list if coin["code"] == code][0]
             formatted_quantity = "{:.6f}".format(quantity)
             value_in_usd = quantity * coin_info["rate"]
-            total_value_in_usd += value_in_usd
+            total_amount_in_usd += value_in_usd
             print_color(
-                f"{code}: {formatted_quantity} {code} | Value in fiat: ${value_in_usd:.2f}"
+                f"{code}: {formatted_quantity} | Quantity Value in fiat: ${value_in_usd:.2f}"
             )
-        if total_value_in_usd == 0:
-            print_color(f"Total Balance in fiat: ${total_balance:.2f}")
-            grand_total += (
-                total_value_in_usd  # Add the total value of assets to the grand total
-            )
-            state.grand_total = grand_total  # Update the state with the grand total
-            print_color(f"Grand Total in fiat: ${grand_total:.2f}")
-        else:
-            print_color(f"Total Balance in fiat: ${total_balance:.2f}")
-            print_color(
-                f"Total Value in fiat of all assets: ${total_value_in_usd:.2f} in cryptocurrency"
-            )
-            grand_total += (
-                total_value_in_usd  # Add the total value of assets to the grand total
-            )
-            state.grand_total = grand_total  # Update the state with the grand total
-            print_color(f"Grand Total in fiat: ${grand_total:.2f}")
     else:
         print_color("\nYour assets:")
         total_amount_in_usd = 0
@@ -384,17 +371,15 @@ def check_total_assets():
             value_in_usd = quantity * coin_info["rate"]
             total_amount_in_usd += value_in_usd
             print_color(
-                f"{code}: {formatted_quantity} {code} | Quantity Value in fiat: ${value_in_usd:.2f}"
+                f"{code}: {formatted_quantity} | Quantity Value in fiat: ${value_in_usd:.2f}"
             )
-        print_color(
-            f"Total Value in fiat of all assets: ${total_amount_in_usd:.2f} in cryptocurrency"
-        )
-        print_color(f"Total Balance in fiat: ${total_balance:.2f}")
+        print_color(f"Total Balance of fiat: ${total_balance:.2f}")
         grand_total += (
             total_amount_in_usd  # Add the total value of assets to the grand total
         )
         state.grand_total = grand_total  # Update the state with the grand total
         print_color(f"Grand Total in fiat (cryptocurrency + fiat): ${grand_total:.2f}")
+        press_any_key_to_continue()
 
 
 # Option 7 - Function to display profit and loss
@@ -569,26 +554,38 @@ def sell_cryptocurrency():
                 )
                 while True:
                     try:
-                        amount_to_sell = float(
-                            input(
-                                f"{COLOR_YELLOW}Enter the amount of {selected_code} to sell (USD): ${COLOR_RESET}"
-                            )
+                        amount_to_sell_input = input(
+                            f"{COLOR_YELLOW}Enter the amount of {selected_code} to sell (USD) or press Enter to sell all: ${COLOR_RESET}"
                         )
-                        if amount_to_sell <= 0:
-                            print_color(
-                                "Invalid amount. Please enter a positive value.",
-                                COLOR_RED,
-                            )
-                            continue
+
+                        if amount_to_sell_input == "":  # User pressed Enter to sell all
+                            amount_to_sell = current_value  # set the amount to sell to the current value
+                        else:
+                            amount_to_sell = float(
+                                amount_to_sell_input
+                            )  # convert the input to float
+                            if amount_to_sell <= 0:
+                                print_color(
+                                    "Invalid amount. Please enter a positive value.",
+                                    COLOR_RED,
+                                )
+                                continue
 
                         if amount_to_sell <= current_value:
                             # Update the total balance by adding the selling amount
                             total_balance += amount_to_sell
                             state.total_balance = total_balance
 
-                            # Update the total_assets dictionary with the newly sold coin and quantity
-                            assets[selected_code] -= amount_to_sell / coin_info["rate"]
-                            state.total_assets = assets
+                            if amount_to_sell < current_value:
+                                # Update the total_assets dictionary with the newly sold coin and quantity
+                                assets[selected_code] -= (
+                                    amount_to_sell / coin_info["rate"]
+                                )
+                                state.total_assets = assets
+                            else:
+                                # If the amount to sell is equal to the current value, remove the coin from the total_assets dictionary
+                                assets.pop(selected_code)
+                                state.total_assets = assets
 
                             # Get the current timestamp
                             timestamp = time.strftime("%Y-%m-d %H:%M:%S")
