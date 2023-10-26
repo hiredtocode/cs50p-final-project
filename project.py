@@ -384,42 +384,34 @@ def check_total_assets():
 
 # Option 7 - Function to display profit and loss
 def display_profit_loss():
-    # Calculate the current value of your cryptocurrency holdings
+    assets = state.total_assets
+    bought_history = state.bought_history
+    coins_list = state.coins_list
 
-    total_assets = state.total_assets
-    total_balance = state.total_balance
-    grand_total = state.grand_total
+    # Create a dictionary to hold initial bought values
+    bought_values = {}
 
-    if not total_assets and total_balance == 0:
-        print_color("You currently own no cryptocurrencies.", COLOR_RED)
-        print_color("You currently own no USD.", COLOR_RED)
-        press_any_key_to_continue()
-    elif not total_assets:
-        print_color("You currently own no cryptocurrencies.", COLOR_RED)
-        print_color(f"Total Balance in fiat: ${total_balance:.2f}")
-        print_color(f"Grand Total in fiat: ${grand_total:.2f}")
-        press_any_key_to_continue()
-    else:
-        print_color("\nYour assets:")
-        total_amount_in_usd = 0
-        for code, quantity in total_assets.items():
-            coin_info = [coin for coin in coins_list if coin["code"] == code][0]
-            formatted_quantity = "{:.6f}".format(quantity)
-            value_in_usd = quantity * coin_info["rate"]
-            total_amount_in_usd += value_in_usd
+    for timestamp, coin_code, quantity, spent in bought_history:
+        if coin_code not in bought_values:
+            bought_values[coin_code] = 0
+        bought_values[coin_code] += spent
+
+    # Create a dictionary to hold current values
+    current_values = {}
+    for coin_code, quantity in assets.items():
+        coin_info = [coin for coin in coins_list if coin["code"] == coin_code][0]
+        current_values[coin_code] = quantity * coin_info["rate"]
+
+    print_color("P/L Statistics", COLOR_YELLOW)
+
+    for coin_code, initial_value in bought_values.items():
+        if coin_code in current_values:  # Coin still exists in assets
+            pl_value = current_values[coin_code] - initial_value
+            status = "Profit" if pl_value > 0 else "Loss"
             print_color(
-                f"{code}: {formatted_quantity} {code} | Quantity Value in fiat: ${value_in_usd:.2f}"
+                f"{coin_code}: ${pl_value:.2f} ({status})",
+                COLOR_GREEN if pl_value > 0 else COLOR_RED,
             )
-        print_color(
-            f"Total Value in fiat of all assets: ${total_amount_in_usd:.2f} in cryptocurrency"
-        )
-        print_color(f"Total Balance in fiat: ${total_balance:.2f}")
-        grand_total += (
-            total_amount_in_usd  # Add the total value of assets to the grand total
-        )
-        state.grand_total = grand_total  # Update the state with the grand total
-        print_color(f"Grand Total in fiat (cryptocurrency + fiat): ${grand_total:.2f}")
-        press_any_key_to_continue()
 
 
 # Option 8 - Function to buy cryptocurrency
