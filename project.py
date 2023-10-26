@@ -349,7 +349,7 @@ def check_total_assets():
         print_color("You currently own no USD.", COLOR_RED)
         press_any_key_to_continue()
     elif not total_assets:
-        print_color(f"Total Balance in fiat: ${total_balance:.2f}", COLOR_GREEN)
+        print_color(f"Total asset is: ${total_balance:.2f} USD", COLOR_GREEN)
     elif not total_balance:
         # display total asset name, value of 6 digits and the value of the asset in fiat
         print_color("\nYour assets:")
