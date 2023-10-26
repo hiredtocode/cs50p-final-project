@@ -36,10 +36,15 @@ class ProgramState:
         self.grand_total = 0
 
     @classmethod
-    def reset_state(cls):
-        # Create an instance first
-        instance = cls()  # Create a new instance of ProgramState
-        instance.load_state()  # Use the instance to call load_state
+    def reset_state(cls, instance):  # Pass the existing instance as an argument
+        instance.favorites = []
+        instance.total_balance = 0
+        instance.total_assets = {}
+        instance.deposit_history = []
+        instance.withdraw_history = []
+        instance.bought_history = []
+        instance.sold_history = []
+        instance.grand_total = 0
         instance.coins_list.clear()
         instance.coins_list.extend(UtilityFunctions.check_coins_list())
         instance.pre_populate_list()  # Use the instance to call pre_populate_list
@@ -99,6 +104,8 @@ class ProgramState:
     def pre_populate_list(self):
         print_color("Pre-populating the coins list...")
 
+        # Clear the existing populated_list
+        self.populated_list.clear()
         # Debug: Print the initial coins_list
         # print("Initial coins_list:", self.coins_list)
 
@@ -689,7 +696,8 @@ def make_withdrawal(balance, amount):
 
 # Option 12 - Function to reset the state
 def reset_state():
-    state.reset_state()
+    state.load_state()  # Load the current state from the file first
+    ProgramState.reset_state(state)  # Now, reset the state using the class method
     state.save_state()  # Save the reset state to the state.json file
     print_color("State reset successfully.", COLOR_GREEN)
 
