@@ -744,7 +744,7 @@ def display_transaction_history():
             for history in bought_history:
                 timestamp, coin, quantity, price = history
                 print_color(
-                    f"Bought: {quantity} {coin} | Price: ${price:.2f} USD | Timestamp: {timestamp}",
+                    f"Bought: {quantity:.6f} {coin} | Price: ${price:.2f} USD | Timestamp: {timestamp}",
                     COLOR_BLUE,
                 )
 
