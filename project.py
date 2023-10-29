@@ -202,7 +202,11 @@ def display_coins_list():
 # Option 2 - Add coins to the favorites list
 def add_to_favorites():
     print_color("\nOption 2 selected - Add a cryptocurrency to my favorites.")
-    print_color(f"\nYour current favorite list contains: {state.favorites}\n")
+    favorite_list = state.favorites
+    if not favorite_list:
+        print_color(f"\nYour current favorite list is empty.\n", COLOR_RED)
+    else:
+        print_color(f"\nYour current favorite list contains: {state.favorites}\n")
     while True:
         print_color("Select a cryptocurrency to add to your favorites:", COLOR_YELLOW)
         for i, coin in enumerate(state.populated_list, 1):
@@ -320,7 +324,7 @@ def display_favorite_list():
     if not favorites:
         print_color("\nYour favorites list is empty.\n", COLOR_RED)
     else:
-        print_color("Favorites list:")
+        print_color(f"Favorites list: {favorites}")
         for i, coin_code in enumerate(favorites, 1):
             # Access coin info from the coins_list in the state
             coin_info = [
@@ -462,6 +466,12 @@ def buy_cryptocurrency():
                     state.total_assets[coin_name] += quantity
                 else:
                     state.total_assets[coin_name] = quantity
+
+                if coin_name not in state.favorites:
+                    state.favorites.append(coin_name)  # Add the coin to favorites
+                    state.save_state()  # Save the updated state to state.json
+                else:
+                    continue
 
                 total_balance -= amount_to_buy
                 state.total_balance = total_balance
