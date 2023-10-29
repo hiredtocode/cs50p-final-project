@@ -470,6 +470,7 @@ def buy_cryptocurrency():
                 if coin_name not in state.favorites:
                     state.favorites.append(coin_name)  # Add the coin to favorites
                     state.save_state()  # Save the updated state to state.json
+                    print_color(f"{coin_name} has been added to your favorites.")
                 else:
                     continue
 
