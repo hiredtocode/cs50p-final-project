@@ -167,21 +167,16 @@ class UtilityFunctions:
     # Function to auto-update the coins list in the background every 60 seconds
     @staticmethod
     def update_coins_list(coins_list):
-        stop_background_thread = UtilityFunctions.stop_background_thread
+        global stop_background_thread
 
         while not stop_background_thread:
             try:
                 new_coins_list = UtilityFunctions.check_coins_list()
-
-                # Acquire the lock before updating the coins_list
                 with coins_list_lock:
-                    coins_list.clear()
-                    coins_list.extend(new_coins_list)
-
-                # Sleep for a while before updating again
-                time.sleep(60)  # Adjust the sleep duration as needed
-
-            except KeyboardInterrupt:  # Handle Ctrl+C gracefully
+                    state.coins_list.clear()
+                    state.coins_list.extend(new_coins_list)
+                time.sleep(60)
+            except KeyboardInterrupt:
                 stop_background_thread = True
                 break
 
@@ -395,9 +390,12 @@ def check_total_assets():
 
 # Option 7 - Function to display profit and loss
 def display_profit_loss():
+    # Lock acquisition to ensure the coin rates are current
+    with coins_list_lock:
+        coins_list = state.coins_list  # Use the updated coins_list from the state
+
     assets = state.total_assets
     bought_history = state.bought_history
-    coins_list = state.coins_list
 
     # Create a dictionary to hold initial bought values
     bought_values = {}
@@ -918,16 +916,16 @@ if __name__ == "__main__":
     if not populated_list:
         state.pre_populate_list()
 
-    main_menu_loop()
+    coins_list_lock = threading.Lock()  # Define the lock before starting the thread
+    stop_background_thread = False  # Define the stop signal before starting the thread
 
     # Start the background thread to update the coins list
     coins_thread = threading.Thread(
-        target=UtilityFunctions.update_coins_list, args=(coins_list,)
+        target=UtilityFunctions.update_coins_list, args=(state.coins_list,)
     )
     coins_thread.daemon = (
         True  # This allows the thread to exit when the main program exits
     )
     coins_thread.start()
 
-    coins_list_lock = threading.Lock()
-    stop_background_thread = False
+    main_menu_loop()
