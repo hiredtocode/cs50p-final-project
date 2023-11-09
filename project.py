@@ -388,39 +388,59 @@ def check_total_assets():
         press_any_key_to_continue()
 
 
-# Option 7 - Function to display profit and loss
 def display_profit_loss():
     # Lock acquisition to ensure the coin rates are current
     with coins_list_lock:
         coins_list = state.coins_list  # Use the updated coins_list from the state
 
-    assets = state.total_assets
-    bought_history = state.bought_history
+    # Calculate the total amount deposited
+    total_deposited = sum([deposit[1] for deposit in state.deposit_history])
 
-    # Create a dictionary to hold initial bought values
-    bought_values = {}
+    # Calculate the current value of all cryptocurrency assets
+    total_crypto_value = sum(
+        quantity
+        * next((coin["rate"] for coin in coins_list if coin["code"] == code), 0)
+        for code, quantity in state.total_assets.items()
+    )
 
-    for timestamp, coin_code, quantity, spent in bought_history:
-        if coin_code not in bought_values:
-            bought_values[coin_code] = 0
-        bought_values[coin_code] += spent
+    # The total asset value is the sum of cash balance and cryptocurrency value
+    total_asset_value = state.total_balance + total_crypto_value
 
-    # Create a dictionary to hold current values
-    current_values = {}
-    for coin_code, quantity in assets.items():
-        coin_info = [coin for coin in coins_list if coin["code"] == coin_code][0]
-        current_values[coin_code] = quantity * coin_info["rate"]
+    # The profit or loss is the total asset value minus the total deposited
+    total_profit_loss = total_asset_value - total_deposited
 
-    print_color("P/L Statistics", COLOR_YELLOW)
+    # Calculate the total percentage change based on the total deposited
+    total_percentage_change = (
+        (total_profit_loss / total_deposited) * 100 if total_deposited else 0
+    )
 
-    for coin_code, initial_value in bought_values.items():
-        if coin_code in current_values:  # Coin still exists in assets
-            pl_value = current_values[coin_code] - initial_value
-            status = "Profit" if pl_value > 0 else "Loss"
-            print_color(
-                f"{coin_code}: ${pl_value:.2f} ({status})",
-                COLOR_GREEN if pl_value > 0 else COLOR_RED,
+    # Display individual profit/loss for each cryptocurrency
+    print_color("Individual P/L Statistics", COLOR_YELLOW)
+    for code, quantity in state.total_assets.items():
+        coin_info = next((coin for coin in coins_list if coin["code"] == code), None)
+        if coin_info:
+            current_value = quantity * coin_info["rate"]
+            initial_value = sum(
+                spent
+                for timestamp, c_code, qty, spent in state.bought_history
+                if c_code == code
             )
+            pl_value = current_value - initial_value
+            pl_percentage = (pl_value / initial_value) * 100 if initial_value else 0
+            status = "Profit" if pl_value > 0 else "Loss"
+            color = COLOR_GREEN if pl_value > 0 else COLOR_RED
+            print_color(
+                f"{code}: ${pl_value:.2f} ({pl_percentage:.2f}%) ({status})", color
+            )
+
+    # Display the total profit or loss with percentage
+    total_status = "Profit" if total_profit_loss > 0 else "Loss"
+    total_color = COLOR_GREEN if total_profit_loss > 0 else COLOR_RED
+    print_color(f"\nTotal Asset Value: ${total_asset_value:.2f}", COLOR_BLUE)
+    print_color(
+        f"Total P/L: ${total_profit_loss:.2f} ({total_percentage_change:.2f}%) ({total_status})",
+        total_color,
+    )
 
 
 # Option 8 - Function to buy cryptocurrency
