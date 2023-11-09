@@ -428,14 +428,14 @@ def display_profit_loss():
             pl_value = current_value - initial_value
             pl_percentage = (pl_value / initial_value) * 100 if initial_value else 0
             status = "Profit" if pl_value > 0 else "Loss"
-            color = COLOR_GREEN if pl_value > 0 else COLOR_RED
+            color = COLOR_GREEN if pl_value >= 0 else COLOR_RED
             print_color(
                 f"\n{code}: ${pl_value:.2f} ({pl_percentage:.2f}%) ({status})", color
             )
 
     # Display the total profit or loss with percentage
     total_status = "Profit" if total_profit_loss > 0 else "Loss"
-    total_color = COLOR_GREEN if total_profit_loss > 0 else COLOR_RED
+    total_color = COLOR_GREEN if total_profit_loss >= 0 else COLOR_RED
     print_color(f"\nTotal Asset Value: ${total_asset_value:.2f}", COLOR_BLUE)
     print_color(
         f"Total P/L: ${total_profit_loss:.2f} ({total_percentage_change:.2f}%) ({total_status})",
@@ -450,17 +450,15 @@ def buy_cryptocurrency():
     print_color("\nOption 8 selected - Buy cryptocurrency\n")
     display_coins_list()
     while True:
-        choice = int(
-            input(
-                "Select a cryptocurrency to buy or press Enter to return to the main menu: "
-            )
+        user_input = input(
+            "Select a cryptocurrency to buy or press Enter to return to the main menu: "
         )
-        if choice == "":
-            break
+        if user_input == "":
+            return None  # Return None to indicate no purchase was made
         try:
-            choice = int(choice)
-            if 1 <= choice <= len(coins_list):
-                selected_coin = coins_list[choice - 1]
+            choice = int(user_input)
+            if 1 <= choice <= len(state.coins_list):
+                selected_coin = state.coins_list[choice - 1]
                 break
             else:
                 print_color("Invalid choice. Please select a valid number.", COLOR_RED)
@@ -470,67 +468,52 @@ def buy_cryptocurrency():
     while True:
         try:
             amount_to_buy = float(
-                input(f"Enter the amount of {selected_coin['code']} to buy (USD): $")
+                input(f"Enter the amount of {selected_coin['code']} to buy in USD: ")
             )
             if amount_to_buy <= 0:
                 print_color("Invalid amount. Please enter a positive value.", COLOR_RED)
                 continue
 
-            if amount_to_buy <= total_balance:
-                coin_name = selected_coin["code"]
-                quantity = amount_to_buy / selected_coin["rate"]
-
-                if coin_name in state.total_assets:
-                    state.total_assets[coin_name] += quantity
-                else:
-                    state.total_assets[coin_name] = quantity
-
-                if coin_name not in state.favorites:
-                    state.favorites.append(coin_name)  # Add the coin to favorites
-                    state.save_state()  # Save the updated state to state.json
-                    print_color(f"{coin_name} has been added to your favorites.")
-                else:
-                    continue
-
-                total_balance -= amount_to_buy
-                state.total_balance = total_balance
-
-                timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-
-                state.bought_history.append(
-                    (timestamp, coin_name, quantity, amount_to_buy)
-                )
-                state.save_state()
-
+            if amount_to_buy > total_balance:
                 print_color(
-                    f"Successfully bought ${amount_to_buy:.2f} worth of {coin_name}."
-                )
-                print_color(
-                    f"The new total amount of owned {coin_name} is: {state.total_assets[coin_name]:.6f}"
-                )
-                print_color(f"Your new total balance in fiat is: ${total_balance:.2f}")
-
-                # Calculate and update the grand total
-                grand_total = total_balance
-                for code, quantity in state.total_assets.items():
-                    coin_info = [coin for coin in coins_list if coin["code"] == code][0]
-                    grand_total += quantity * coin_info["rate"]
-
-                state.grand_total = grand_total
-                print_color(
-                    f"Grand Total in fiat (cryptocurrency + fiat): ${grand_total:.2f}"
-                )
-
-                return total_balance
-            else:
-                print_color(
-                    "Insufficient balance. Please deposit more and try again. Loading main menu...",
+                    "Insufficient balance. Please deposit more and try again.",
                     COLOR_RED,
                 )
-                print_color(
-                    f"Your current fiat balance is: ${total_balance:.2f}", COLOR_RED
-                )
-                pass
+                # Return or break if you want to exit the function after this point
+                return None
+
+            # Process the purchase
+            coin_name = selected_coin["code"]
+            quantity = amount_to_buy / selected_coin["rate"]
+
+            # Update total assets and favorites
+            state.total_assets[coin_name] = (
+                state.total_assets.get(coin_name, 0) + quantity
+            )
+            if coin_name not in state.favorites:
+                state.favorites.append(coin_name)
+                print_color(f"{coin_name} has been added to your favorites.")
+
+            # Deduct the purchase amount from the balance
+            state.total_balance -= amount_to_buy
+
+            # Record the transaction
+            timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+            state.bought_history.append((timestamp, coin_name, quantity, amount_to_buy))
+
+            # Save the state immediately after the purchase
+            state.save_state()
+
+            print_color(
+                f"Successfully bought ${amount_to_buy:.2f} worth of {coin_name}."
+            )
+            print_color(
+                f"Your new total balance in fiat is: ${state.total_balance:.2f}"
+            )
+
+            return (
+                state.total_balance
+            )  # Return the new balance to indicate a successful purchase
         except ValueError:
             print_color("Invalid input. Please enter a valid amount in USD.", COLOR_RED)
 
