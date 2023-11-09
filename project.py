@@ -430,7 +430,7 @@ def display_profit_loss():
             status = "Profit" if pl_value > 0 else "Loss"
             color = COLOR_GREEN if pl_value > 0 else COLOR_RED
             print_color(
-                f"{code}: ${pl_value:.2f} ({pl_percentage:.2f}%) ({status})", color
+                f"\n{code}: ${pl_value:.2f} ({pl_percentage:.2f}%) ({status})", color
             )
 
     # Display the total profit or loss with percentage
