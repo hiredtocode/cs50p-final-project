@@ -677,16 +677,22 @@ def make_a_withdraw():
     total_balance = state.total_balance
     print_color("\nOption 11 selected.")  # Make a withdrawal
     print_color(f"Current amount is ${total_balance:.2f}")
-    withdrawal_amount = float(
-        input("Enter the withdrawal amount or press the Enter key to cancel: ")
-    )
-    if withdrawal_amount <= 0 or withdrawal_amount > total_balance:
-        print_color("Insufficient fund.", COLOR_RED)
-        press_any_key_to_continue()
-    else:
-        total_balance = make_withdrawal(total_balance, withdrawal_amount)
-        print_color(f"Successfully withdrew ${withdrawal_amount:.2f}.")
-        print_color(f"The total balance is now: ${total_balance:.2f}.")
+    try:
+        withdrawal_amount = float(
+            input("Enter the withdrawal amount or press the Enter key to cancel: ")
+        )
+        if withdrawal_amount <= 0 or withdrawal_amount > total_balance:
+            print_color("Insufficient fund.", COLOR_RED)
+            press_any_key_to_continue()
+        else:
+            # Withdrawal logic, updating the total balance
+            total_balance -= withdrawal_amount  # Subtracting the withdrawal amount
+            state.total_balance = total_balance  # Updating the state's total balance
+            print_color(f"Successfully withdrew ${withdrawal_amount:.2f}.")
+            print_color(f"The total balance is now: ${total_balance:.2f}.")
+            press_any_key_to_continue()
+    except ValueError:
+        print_color("Invalid input. Please enter a valid number.", COLOR_RED)
         press_any_key_to_continue()
 
 
