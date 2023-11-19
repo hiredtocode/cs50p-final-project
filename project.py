@@ -355,7 +355,7 @@ def check_total_assets():
         print_color("You currently own no USD.", COLOR_RED)
         press_any_key_to_continue()
     elif not total_assets:
-        print_color(f"Total asset is: ${total_balance:.2f} USD", COLOR_GREEN)
+        print_color(f"\nTotal asset is: ${total_balance:.2f} USD", COLOR_GREEN)
     elif not total_balance:
         # display total asset name, value of 6 digits and the value of the asset in fiat
         print_color("\nYour assets:")
@@ -566,7 +566,7 @@ def sell_cryptocurrency():
                 while True:
                     try:
                         amount_to_sell_input = input(
-                            f"{COLOR_YELLOW}Enter the amount of {selected_code} to sell (USD) or press Enter to sell all: ${COLOR_RESET}"
+                            f"{COLOR_YELLOW}Enter the amount of {selected_code} to sell (USD) or press Enter to sell all: {COLOR_RESET}"
                         )
 
                         if amount_to_sell_input == "":  # User pressed Enter to sell all
@@ -644,7 +644,7 @@ def make_a_deposit():
     total_balance = state.total_balance
     print_color(f"Current balance is ${total_balance:.2f}")
     deposit_amount = float(
-        input("Enter the deposit amount or press the Enter key to cancel: $")
+        input("Enter the deposit amount or press the Enter key to cancel: ")
     )
     if deposit_amount <= 0:
         print_color("Invalid deposit amount.", COLOR_RED)
@@ -678,7 +678,7 @@ def make_a_withdraw():
     print_color("\nOption 11 selected.")  # Make a withdrawal
     print_color(f"Current amount is ${total_balance:.2f}")
     withdrawal_amount = float(
-        input("Enter the withdrawal amount or press the Enter key to cancel: $")
+        input("Enter the withdrawal amount or press the Enter key to cancel: ")
     )
     if withdrawal_amount <= 0 or withdrawal_amount > total_balance:
         print_color("Insufficient fund.", COLOR_RED)
