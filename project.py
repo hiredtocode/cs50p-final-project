@@ -685,9 +685,8 @@ def make_a_withdraw():
             print_color("Insufficient fund.", COLOR_RED)
             press_any_key_to_continue()
         else:
-            # Withdrawal logic, updating the total balance
-            total_balance -= withdrawal_amount  # Subtracting the withdrawal amount
-            state.total_balance = total_balance  # Updating the state's total balance
+            # Call make_withdrawal function to handle the withdrawal logic
+            total_balance = make_withdrawal(total_balance, withdrawal_amount)
             print_color(f"Successfully withdrew ${withdrawal_amount:.2f}.")
             print_color(f"The total balance is now: ${total_balance:.2f}.")
             press_any_key_to_continue()
@@ -696,9 +695,8 @@ def make_a_withdraw():
         press_any_key_to_continue()
 
 
-# Option 11.5 - Function to make a withdrawal
 def make_withdrawal(balance, amount):
-    print_color("\nOption 11 selected - Make a withdraw")
+    print_color("\nOption 11 selected - Make a withdrawal")
     balance -= amount
     state.total_balance = balance
 
