@@ -433,13 +433,22 @@ def display_profit_loss():
             )
             if coin_info:
                 current_value = quantity * coin_info["rate"]
-                initial_value = sum(
+                initial_bought_value = sum(
                     spent
                     for timestamp, c_code, qty, spent in state.bought_history
                     if c_code == code
                 )
-                pl_value = current_value - initial_value
-                pl_percentage = (pl_value / initial_value) * 100 if initial_value else 0
+                initial_sold_value = sum(
+                    spent
+                    for timestamp, c_code, qty, spent in state.sold_history
+                    if c_code == code
+                )
+                pl_value = current_value - initial_bought_value + initial_sold_value
+                pl_percentage = (
+                    (pl_value / initial_bought_value) * 100
+                    if initial_bought_value
+                    else 0
+                )
                 status = "Profit" if pl_value > 0 else "Loss"
                 color = COLOR_GREEN if pl_value >= 0 else COLOR_RED
                 print_color(
