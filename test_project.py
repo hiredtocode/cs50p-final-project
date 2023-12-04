@@ -18,7 +18,7 @@ def test_check_service_credits(mock_post):
     assert credits == 100
 
 
-def test_program_state_initialization():
+def test_programState():
     state = ProgramState()
     assert state.favorites == []
     assert state.total_balance == 0
